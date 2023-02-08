@@ -43,7 +43,7 @@ class IsolateModel extends ChangeNotifier{
     ReceivePort rootReceivePort = ReceivePort();
 
     //创建一个新的isolate
-    //传入要执行任务方法doWork
+    //传入要执行回调函数doWork
     //传入主isolate的接收端口rootReceivePort的sendPort，用于子isolate的sendPort
     await Isolate.spawn(doWork, rootReceivePort.sendPort);
 
