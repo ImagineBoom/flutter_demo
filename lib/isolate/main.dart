@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:window_size/window_size.dart';
-import 'isolate/model/isolate.dart';
-import 'isolate/screen/home.dart';
+import 'model/isolate.dart';
+import 'screen/home.dart';
 
 
 void main() {
