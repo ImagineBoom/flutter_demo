@@ -176,3 +176,90 @@ if(isolateModel_.isClick){
 }
 ```
 
+## json serializable
+
+1. pubspec.yaml添加对应库
+```dart
+dependencies:
+  json_annotation: ^4.8.0
+
+dev_dependencies:
+  build_runner: ^2.3.3
+  json_serializable: ^6.6.0
+```
+
+2. 添加part声明，同文件名加.g.
+```dart
+part 'json_serialize.g.dart';
+```
+
+3. 添加Json语法糖
+```dart
+// 用于开启成员类的生成
+@JsonSerializable(explicitToJson: true)
+class DemoModel extends ChangeNotifier{
+
+  // 显式声明json key
+  @JsonKey(name: "Num")
+  num number;
+
+  @JsonKey(name: "Label")
+  String label;
+
+  // 保存checkpoint的文件夹名称
+  @JsonKey(name: "BasePath")
+  String BasePath="";
+
+  // checkpoint列表
+  @JsonKey(name: "datalist")
+  List <DataModel> datalist=[];
+
+  DemoModel(this.number,this.label);
+  ...
+
+}
+```
+
+4. 编写json<->model互转的语句
+```dart
+// 用于开启成员类的生成
+@JsonSerializable(explicitToJson: true)
+class DemoModel extends ChangeNotifier{
+  ...
+  // 编写json<->model互转的语句
+  factory DemoModel.fromJson(Map<String,dynamic> json) => _$DemoModelFromJson(json);
+  Map<String, dynamic> toJson() => _$DemoModelToJson(this);
+
+}
+```
+
+5. 添加build.yaml
+```dart
+targets:
+  $default:
+    builders:
+      json_serializable:
+        options:
+          # Options configure how source code is generated for every
+          # `@JsonSerializable`-annotated class in the package.
+          #
+          # The default value for each is listed.
+          any_map: false
+          checked: false
+          constructor: ""
+          create_factory: true
+          create_field_map: false
+          create_to_json: true
+          disallow_unrecognized_keys: false
+          explicit_to_json: true
+          field_rename: none
+          generic_argument_factories: false
+          ignore_unannotated: false
+          include_if_null: true
+```
+
+6. 项目顶层目录执行自动生成器
+```dart
+flutter pub run build_runner watch
+```
+生成的代码在同级目录下
