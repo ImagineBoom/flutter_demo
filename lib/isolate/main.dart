@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_demo/isolate/model/isolate_fw.dart';
 import 'package:provider/provider.dart';
 import 'package:window_size/window_size.dart';
 import 'model/isolate.dart';
@@ -40,6 +41,7 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => IsolateModel()),
+        ChangeNotifierProvider(create: (context) => IsolateModel_fw()),
       ],
       child: MaterialApp(
         title: 'Isolate Demo',

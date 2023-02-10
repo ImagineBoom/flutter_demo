@@ -1,11 +1,11 @@
 //isolate_create.dart文件
 import 'dart:isolate';
 import 'dart:io';
-
+import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart';
 
 
-class IsolateModel extends ChangeNotifier{
+class IsolateModel_fw extends ChangeNotifier{
   final List<String> messageList=[];
   bool isClick=false;
 
@@ -29,6 +29,7 @@ class IsolateModel extends ChangeNotifier{
   }
 
   Future<void> main(List<String> args) async {
+
     //主isolate启动
     messageNotify("main isolate start");
 
@@ -37,7 +38,8 @@ class IsolateModel extends ChangeNotifier{
 
     //创建一个新的isolate
     await createIsolate();
-
+    //主isolate停止
+    // print("main isolate end");
   }
 
 //创建一个新的isolate
@@ -49,10 +51,16 @@ class IsolateModel extends ChangeNotifier{
     //接收消息端口
     ReceivePort rootReceivePort = ReceivePort();
 
-    //创建一个新的isolate
-    //传入要执行回调函数doWork
-    //传入主isolate的接收端口rootReceivePort的sendPort，用于子isolate的sendPort
-    await Isolate.spawn(doWork, rootReceivePort.sendPort);
+    // 获取工作目录，用于存储数据
+    // getApplicationSupportDirectory
+    // 支持Android,	iOS,	Linux,	macOS,	Windows
+    // SDK 16+,	9.0+,	Any,	10.11+,	Windows 10+
+    String dir = await getApplicationSupportDirectory().then((value) => value.path);
+    // 创建一个新的isolate
+    // 传入要执行回调函数doWork
+    // 传入主isolate的接收端口rootReceivePort的sendPort，用于子isolate的sendPort
+    // 传入数据存储的目录
+    await Isolate.spawn(doWork, [rootReceivePort.sendPort,dir]);
 
 
     //接收消息端口监听新isolate发送过来的消息
@@ -100,10 +108,12 @@ class IsolateModel extends ChangeNotifier{
 // isolate 的回调函数要么是顶层，要么是静态函数
 
 //处理耗时任务 接收一个可以向主isolate发送消息的端口
-void doWork(SendPort sendPort){
+Future<void> doWork(List<dynamic> args) async {
+
 
   //发送消息端口
-  //sendPort;
+  SendPort sendPort= args[0];
+  String dir = args[1];
 
   //接收消息端口
   ReceivePort receivePort = ReceivePort();
@@ -124,8 +134,7 @@ void doWork(SendPort sendPort){
   //将新isolate的sendPort发送到主isolate中用于通信
   sendPort.send(sendMessage);
 
-  // 模拟耗时5秒
-  sleep(const Duration(seconds:5));
+  String res= await fwTask(dir);
 
   sendMessage={
     'type':'message',
@@ -141,10 +150,16 @@ void doWork(SendPort sendPort){
 
   sendMessage={
     'type':'message',
-    'data':'task1 finished',
+    'data':'task1 finished,res= $res',
     'state':'end'
   };
 
   //发送消息表示任务结束
   sendPort.send(sendMessage);
+}
+
+Future<String> fwTask(String dir) async {
+  File file = await File('$dir/data.json').create(recursive: true);
+  await file.writeAsString("write contents test",mode: FileMode.writeOnly);
+  return file.readAsString();
 }

@@ -1,8 +1,7 @@
-import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_demo/isolate/model/isolate.dart';
+import 'package:flutter_demo/isolate/model/isolate_fw.dart';
 import 'package:provider/provider.dart';
 
 class HomePage extends StatelessWidget{
@@ -15,7 +14,9 @@ class HomePage extends StatelessWidget{
   @override
   Widget build(BuildContext context) {
 
+
     var isolateModel = context.watch<IsolateModel>();
+    var isolateModel_fw = context.watch<IsolateModel_fw>();
 
     return Scaffold(
       appBar: AppBar(
@@ -38,9 +39,20 @@ class HomePage extends StatelessWidget{
       bottomSheet: Row(
         children: [
           MaterialButton(
-            onPressed: () async=> await isolateModel.main([]),
+            onPressed: () async=> {
+              isolateModel_fw.setIsClick(false),
+              await isolateModel.main([])
+            },
             color: Colors.greenAccent,
             child: Text("new Isolate"),
+          ),
+          MaterialButton(
+            onPressed: () async=> {
+              isolateModel.setIsClick(false),
+              await isolateModel_fw.main([]),
+            },
+            color: Colors.greenAccent,
+            child: Text("new Isolate fw"),
           ),
         ],
       ),
@@ -57,7 +69,15 @@ class MessageList extends StatelessWidget {
     // This gets the current state of CartModel and also tells Flutter
     // to rebuild this widget when CartModel notifies listeners (in other words,
     // when it changes).
-    var isolateModel = context.watch<IsolateModel>();
+    var isolateModel_ = context.watch<IsolateModel>();
+    var isolateModel_fw = context.watch<IsolateModel_fw>();
+    dynamic isolateModel=isolateModel_;
+    if(isolateModel_.isClick){
+      isolateModel=isolateModel_;
+    }else if(isolateModel_fw.isClick){
+      isolateModel=isolateModel_fw;
+    }
+
     // print(isolateModel.messageList.length);
     return ListView.builder(
       itemCount: isolateModel.messageList.length,
