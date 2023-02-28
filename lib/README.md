@@ -201,7 +201,7 @@ class DemoModel extends ChangeNotifier{
 
   // 显式声明json key
   @JsonKey(name: "Num")
-  num number;
+  num? number;
 
   @JsonKey(name: "Label")
   String label;
@@ -219,6 +219,7 @@ class DemoModel extends ChangeNotifier{
 
 }
 ```
+数字型的变量无初始值时需要制定为可空类型
 
 4. 编写json<->model互转的语句
 ```dart
@@ -263,3 +264,58 @@ targets:
 flutter pub run build_runner watch
 ```
 生成的代码在同级目录下
+
+## 语法使用
+### 使用类中的其他变量初始化变量
+
+```dart
+class Test {
+  int foo = 0;
+  late int bar = foo; // No error
+}
+```
+### Row中元素均匀排列
+```dart
+Row(
+    mainAxisAlignment:MainAxisAlignment.spaceEvenly,
+    children: [
+        Text(index.toString()),
+        Text(checkpointsModel.checkpointlist[index].simpts.toString()),
+        Text(checkpointsModel.checkpointlist[index].weights.toString()),
+    ],
+),
+```
+
+- mainAxisAlignment:MainAxisAlignment.spaceBetween,//所有子节点均匀分布，第一个和最后一个子节点顶格
+- mainAxisAlignment:MainAxisAlignment.spaceAround,//所有子节点均匀分布，但第一个子节点之前和最后一个子节点之后也会有一半大小的均分的空间
+- mainAxisAlignment:MainAxisAlignment.spaceEvenly,//所有子节点均匀分布，但第一个子节点之前和最后一个子节点之后也会有均分的空间
+- mainAxisAlignment:MainAxisAlignment.start,
+- mainAxisAlignment:MainAxisAlignment.center,
+- mainAxisAlignment:MainAxisAlignment.end,
+
+#### 调整字符串占位数,给出占位数和占位符
+```dart
+simpts.toString().padLeft(6," ")
+simpts.toString().padRight(6," ")
+```
+#### double类型，设置精度
+```dart
+double a=0.0;
+a+=0.1;
+print(a.toStringAsPrecision(2));//小数点后的长度不一定是2位，可能是3位
+print(a.toStringAsFixed(2));//小数点后的位数一定是两位
+```
+
+### 组件-AspectRatio
+```dart
+AspectRatio(
+  aspectRatio: 2.0 / 1.0,
+  child: Container(color: Colors.blue),
+)
+```
+
+### 生成列表的便捷方法
+```dart
+List a = new List.generate(10, (value) => value + 1);
+print(a);//[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+```
