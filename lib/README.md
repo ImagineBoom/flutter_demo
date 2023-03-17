@@ -319,3 +319,15 @@ AspectRatio(
 List a = new List.generate(10, (value) => value + 1);
 print(a);//[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 ```
+
+### Converts object to a JSON String.
+```dart
+// 不带indent
+String json = jsonEncode(this);
+```
+```dart
+// 自定义indent
+var spaces = ' ' * 4;
+var encoder = JsonEncoder.withIndent(spaces);
+String json = encoder.convert(this);
+```
