@@ -331,3 +331,41 @@ var spaces = ' ' * 4;
 var encoder = JsonEncoder.withIndent(spaces);
 String json = encoder.convert(this);
 ```
+
+### 全局配置的设置方式
+- 实际配置类
+```dart
+@JsonSerializable(explicitToJson: true)
+class AppConfig {
+
+  @JsonKey(name: "theme")
+  ColorCode? theme = ColorCode.blue;
+  
+}
+```
+- 全局变量类
+```dart
+class Global {
+  Global.create(){
+    AppConfig appconfig = AppConfig(ColorCode.blue);
+    appconfig.writeConfig();
+  }
+
+  // 项目配置
+  static AppConfig profile = AppConfig.empty();
+}
+```
+- 将配置类与全局变量类相互绑定的类
+```dart
+// Global.profile是全局配置
+class AppConfigModel extends ChangeNotifier{
+
+  AppConfig get appConfig=>Global.profile;
+
+  void set appConfig(AppConfig appConfig){
+    Global.profile=appConfig;
+    Global.profile.writeConfig();
+    notifyListeners();
+  }
+}
+```
