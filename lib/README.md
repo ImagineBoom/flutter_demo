@@ -302,9 +302,12 @@ simpts.toString().padRight(6," ")
 ```dart
 double a=0.0;
 a+=0.1;
+//都是四舍五入
 print(a.toStringAsPrecision(2));//小数点后的长度不一定是2位，可能是3位
 print(a.toStringAsFixed(2));//小数点后的位数一定是两位
-num.parse((barChartRodData_toY_max/10).toStringAsPrecision(2))//double->string->double
+//再转为数字
+num.parse((0.6625/10).toStringAsPrecision(2))//double->string->num
+double.parse(0.6625.toStringAsPrecision(1))//double->string->double
 ```
 
 ### 组件-AspectRatio
