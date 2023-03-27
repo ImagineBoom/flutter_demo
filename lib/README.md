@@ -373,3 +373,15 @@ class AppConfigModel extends ChangeNotifier{
   }
 }
 ```
+
+### 根据条件使用/添加组件
+spread运算符 ...
+将一个列表添加到另一个列表中
+```dart
+Widget foo = Column(children:[
+  MyHeader(),
+  ...isHandset ?
+      _getHandsetChildren() :
+      _getNormalChildren(),
+]);
+```
