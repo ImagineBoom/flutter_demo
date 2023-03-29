@@ -401,3 +401,30 @@ class MyApp extends StatelessWidget{
   }
 }
 ```
+### Material Button
+```dart
+Container(
+  color: Colors.grey.shade200,
+  width: leftPanelBar_width-5,
+  alignment: Alignment.center,
+
+  child:MaterialButton(
+    color: clickLeftPanelBar?Colors.blue:Colors.grey.shade200,
+    highlightElevation:0,
+    focusElevation:0,
+    hoverElevation: 0,
+    padding: EdgeInsets.zero, //使 Icon居中
+    shape: RoundedRectangleBorder( // shape用法
+        borderRadius: BorderRadius.circular(5)
+    ),
+    elevation:0,  //阴影大小
+    onPressed: (){
+      setState(() {
+        clickLeftPanelBar=!clickLeftPanelBar;
+      });
+    },
+    child: Icon(Icons.explore_outlined,),
+    // minWidth: 35,
+  ),
+),
+```
