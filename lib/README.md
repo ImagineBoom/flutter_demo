@@ -385,3 +385,19 @@ Widget foo = Column(children:[
       _getNormalChildren(),
 ]);
 ```
+### 隐藏debug字段
+debugShowCheckedModeBanner:false
+```dart
+class MyApp extends StatelessWidget{
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner:false,
+      title: "resizable layout",
+      home: Scaffold(
+        body: HomePage(),
+      ),
+    );
+  }
+}
+```
