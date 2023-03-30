@@ -514,3 +514,21 @@ Stack(
 ),
 
 ```
+### Column/Row
+Column的mainAxisSize默认值为max，在垂直方向占用尽可能多的空间
+Row的mainAxisSize默认值为max，在水平方向占用尽可能多的空间
+
+### 约束
+ConstrainedBox用于给子组件添加限制
+```dart
+ConstrainedBox(
+  constraints: BoxConstraints(
+    minWidth: double.infinity, //宽度尽可能大
+    minHeight: 50.0 //最小高度为50像素
+  ),
+  child: Container(
+    height: 5.0, 
+    child: redBox ,
+  ),
+)
+```
