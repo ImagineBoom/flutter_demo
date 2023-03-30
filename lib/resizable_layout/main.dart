@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_demo/resizable_layout/component_view.dart';
 
 void main()=> runApp(MyApp());
 
@@ -27,10 +28,10 @@ class _HomePageState extends State<HomePage>{
   bool clickRightPanelBar=false;
   bool clickLeftPanelBar=false;
 
-  double rightPanel_width=50;
+  double rightPanel_width=300;
   double rightPanelBar_width=40;
 
-  double leftPanel_width=50;
+  double leftPanel_width=300;
   double leftPanelBar_width=40;
 
   double bottomPanel_width=40;
@@ -99,7 +100,7 @@ class _HomePageState extends State<HomePage>{
                           alignment: Alignment.center,
 
                           child:MaterialButton(
-                            color: clickLeftPanelBar?Colors.blue:Colors.grey.shade300,
+                            color: Colors.grey.shade300,
                             highlightElevation:0,
                             focusElevation:0,
                             hoverElevation: 0,
@@ -113,7 +114,7 @@ class _HomePageState extends State<HomePage>{
                                 clickLeftPanelBar=!clickLeftPanelBar;
                               });
                             },
-                            child: Icon(Icons.explore_outlined,color: clickLeftPanelBar?Colors.white.withOpacity(0.8):Colors.black,),
+                            child: Icon(Icons.explore_outlined,color: Colors.black,),
                             // minWidth: 35,
                           ),
                         ),
@@ -124,7 +125,7 @@ class _HomePageState extends State<HomePage>{
                           alignment: Alignment.center,
 
                           child:MaterialButton(
-                            color: clickLeftPanelBar?Colors.blue:Colors.grey.shade300,
+                            color: Colors.grey.shade300,
                             highlightElevation:0,
                             focusElevation:0,
                             hoverElevation: 0,
@@ -138,7 +139,7 @@ class _HomePageState extends State<HomePage>{
                                 clickLeftPanelBar=!clickLeftPanelBar;
                               });
                             },
-                            child: Icon(Icons.explore_outlined,color: clickLeftPanelBar?Colors.white.withOpacity(0.8):Colors.black,),
+                            child: Icon(Icons.explore_outlined,color: Colors.black,),
                             // minWidth: 35,
                           ),
                         ),
@@ -174,7 +175,13 @@ class _HomePageState extends State<HomePage>{
                                 leftPanel_width+=dx;
                             }
                           });
-                        },),
+                        },
+                        onHover: (double width){
+                          setState(() {
+                            VerticalDivider_width=width;
+                          });
+                        },
+                      ),
 
                     ],
                   )
@@ -193,7 +200,23 @@ class _HomePageState extends State<HomePage>{
                 bottom: bottomPanelBar_width,
                 left: clickLeftPanelBar?leftPanelBar_width+leftPanel_width+VerticalDivider_width:leftPanelBar_width,
                 right: clickRightPanelBar?rightPanelBar_width+rightPanel_width+VerticalDivider_width:rightPanelBar_width,
-                child: Container(color: Colors.green,),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Spacer(flex: 1,),
+                        IconButton(
+                          onPressed: (){},
+                          icon: Icon(Icons.add_card,),
+                          padding: EdgeInsets.zero,
+                          
+                        ),
+                        IconButton(onPressed: (){}, icon: Icon(Icons.more_horiz), padding: EdgeInsets.zero,)
+                      ],
+                    ),
+                    Container(color: Colors.green,),
+                  ],
+                )
               ),
 
 
@@ -218,7 +241,13 @@ class _HomePageState extends State<HomePage>{
                               rightPanel_width-=dx;
                             }
                           });
-                        },),
+                        },
+                        onHover: (double width){
+                          setState(() {
+                            VerticalDivider_width=width;
+                          });
+                        },
+                      ),
 
                       // right panel
                       Container(color: Colors.blue, width: rightPanel_width,),
@@ -275,7 +304,7 @@ class _HomePageState extends State<HomePage>{
                           alignment: Alignment.center,
 
                           child:MaterialButton(
-                            color: clickRightPanelBar?Colors.blue:Colors.grey.shade300,
+                            color: Colors.grey.shade300,
                             highlightElevation:0,
                             focusElevation:0,
                             hoverElevation: 0,
@@ -289,7 +318,7 @@ class _HomePageState extends State<HomePage>{
                                 clickRightPanelBar=!clickRightPanelBar;
                               });
                             },
-                            child: Icon(Icons.account_tree_outlined,color: clickRightPanelBar?Colors.white.withOpacity(0.8):Colors.black,),
+                            child: Icon(Icons.account_tree_outlined,color:Colors.black,),
                             // minWidth: 35,
                           ),
                         ),
@@ -300,7 +329,7 @@ class _HomePageState extends State<HomePage>{
                           alignment: Alignment.center,
 
                           child:MaterialButton(
-                            color: clickRightPanelBar?Colors.blue:Colors.grey.shade300,
+                            color: Colors.grey.shade300,
                             highlightElevation:0,
                             focusElevation:0,
                             hoverElevation: 0,
@@ -314,7 +343,7 @@ class _HomePageState extends State<HomePage>{
                                 clickRightPanelBar=!clickRightPanelBar;
                               });
                             },
-                            child: Icon(Icons.account_tree_outlined,color: clickRightPanelBar?Colors.white.withOpacity(0.8):Colors.black,),
+                            child: Icon(Icons.account_tree_outlined,color: Colors.black,),
                             // minWidth: 35,
                           ),
                         ),
@@ -340,7 +369,7 @@ class _HomePageState extends State<HomePage>{
                           onPressed: () => {},
                           child: Icon(
                             Icons.settings_input_component,
-                            color: CupertinoColors.extraLightBackgroundGray,
+                            color: CupertinoColors.extraLightBackgroundGray.withAlpha(220),
                           ),
                           // height: 20,
                           // minWidth: 20,
@@ -350,12 +379,22 @@ class _HomePageState extends State<HomePage>{
                         onPressed: ()=>{},
                         child: Icon(
                           Icons.refresh,
-                          color: CupertinoColors.extraLightBackgroundGray,
+                          color: CupertinoColors.extraLightBackgroundGray.withAlpha(220),
                         ),
                         // height: 20,
                         // minWidth:20,
                       ),
+                      Spacer(flex: 24),
+                      Row(
+                        children: [
+                          Icon(Icons.remove,color: Colors.white.withAlpha(190),),
+                          Sliders(),
+                          Icon(Icons.add,color: Colors.white.withAlpha(190),),
+                        ],
+                      ),
+                      Spacer(flex: 1),
                     ],
+
                   ),
                 ),),
 
@@ -374,8 +413,9 @@ class _HomePageState extends State<HomePage>{
 class VerticalDivider extends StatefulWidget{
 
   final Function ? onDrag;
+  final Function ? onHover;
   final double VerticalDivider_width;
-  const VerticalDivider({super.key,this.onDrag,this.VerticalDivider_width=1});
+  const VerticalDivider({super.key, this.onDrag, this.onHover, this.VerticalDivider_width=1});
 
   @override
   State<VerticalDivider> createState() {
@@ -387,10 +427,23 @@ class VerticalDivider extends StatefulWidget{
 class _VerticalDividerState extends State<VerticalDivider>{
 
   late double start_x;
+  bool isHovered=false;
 
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
+      onHover: (event){
+          isHovered=true;
+          widget.onHover!(2.0);
+        },
+      onEnter: (event){
+        isHovered=true;
+        widget.onHover!(2.0);
+      },
+      onExit: (event){
+        isHovered=false;
+        widget.onHover!(widget.VerticalDivider_width);
+      },
       cursor: SystemMouseCursors.resizeLeftRight,
       child: GestureDetector(
         onHorizontalDragStart: (details){
@@ -401,8 +454,8 @@ class _VerticalDividerState extends State<VerticalDivider>{
           widget.onDrag!(dx);
         },
         child: Container(
-          width: widget.VerticalDivider_width,
-          color: Colors.transparent,
+          width: isHovered?widget.VerticalDivider_width:widget.VerticalDivider_width,
+          color: isHovered?CupertinoColors.activeBlue:Colors.transparent,
         ),
       ),
     );
