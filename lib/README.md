@@ -489,3 +489,28 @@ class _VerticalDividerState extends State<VerticalDivider>{
     },
   ),
 ```
+
+### Stack与Positioned
+- Positioned父级必须是Stack
+- Positioned的top、bottom、left、right都是相对于Stack而言的
+```dart
+Stack(
+  children: [
+    Positioned(
+      top:0,
+      bottom: 0,
+      left: 0,
+      right: 0,
+      child: Column(children: [
+          Row(children: [
+              IconButton(onPressed: (){},icon: Icon(Icons.more_horiz),padding: EdgeInsets.zero,)
+            ],
+          ),
+          Expanded(child: Container(color: Colors.green,),),
+        ],
+      )
+    ),
+  ],
+),
+
+```
