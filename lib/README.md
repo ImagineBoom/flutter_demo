@@ -428,3 +428,64 @@ Container(
   ),
 ),
 ```
+
+### 修改状态
+
+```dart
+// resize LeftRight divider
+class VerticalDivider extends StatefulWidget{
+
+  final Function ? onHover;//通过传递函数修改final成员VerticalDivider_width的值
+  final double VerticalDivider_width;
+  const VerticalDivider({super.key, this.onDrag, this.onHover, this.VerticalDivider_width=1});
+
+  @override
+  State<VerticalDivider> createState() {
+    return _VerticalDividerState();
+  }
+
+}
+
+class _VerticalDividerState extends State<VerticalDivider>{
+
+  bool isHovered=false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onHover: (event){
+          isHovered=true;
+          widget.onHover!(2.0);
+        },
+      onEnter: (event){
+        isHovered=true;
+        widget.onHover!(2.0);
+      },
+      onExit: (event){
+        isHovered=false;
+        widget.onHover!(1.0);
+      },
+      cursor: SystemMouseCursors.resizeLeftRight,
+      child: GestureDetector(
+        child: Container(
+          width: isHovered?widget.VerticalDivider_width:widget.VerticalDivider_width,
+          color: isHovered?CupertinoColors.activeBlue:Colors.transparent,
+        ),
+      ),
+    );
+  }
+
+}
+
+```
+
+```dart
+  VerticalDivider(
+    VerticalDivider_width:VerticalDivider_width,
+    onHover: (double width){
+      setState(() {
+        VerticalDivider_width=width;
+      });
+    },
+  ),
+```
