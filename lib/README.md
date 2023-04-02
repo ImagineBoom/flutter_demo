@@ -324,6 +324,24 @@ List a = new List.generate(10, (value) => value + 1);
 print(a);//[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 ```
 
+### Stateful与State
+当该 widget 的父 widget 重建时，父 widget 首先会创建一个 ShoppingList（Stateful） 的实例，
+但是框架会复用之前创建的 _ShoppingListState(State)，而不会重新调用 createState。
+
+### map方法的使用
+```dart
+//在子State组件中，对 Stateful组件中的final list 成员products，进行遍历，调用匿名函数进行处理，然后使用tolist转换成列表，可以赋值给children
+  body: ListView(
+    children: widget.products.map((product) {
+      return ShoppingListItem(
+        product: product,
+        inCart: _shoppingCart.contains(product),
+        onCartChanged: _handleCartChanged,
+      );
+    }).toList(),
+  ),
+```
+
 ### Converts object to a JSON String.
 ```dart
 // 不带indent
@@ -429,7 +447,16 @@ Container(
 ),
 ```
 
-### 修改状态
+### IconButton
+```dart
+IconButton(
+  onPressed: (){},
+  icon: Icon(Icons.clear),
+  splashRadius: 15.0,//调节press和hover时的阴影大小，Material 3 中移除
+),
+```
+
+### 回调函数修改状态
 
 ```dart
 // resize LeftRight divider
@@ -531,4 +558,13 @@ ConstrainedBox(
     child: redBox ,
   ),
 )
+```
+
+### 旋转
+```dart
+icon: Transform.rotate(angle: math.pi/2, child: Icon(Icons.splitscreen,),),
+```
+### rondom color
+```dart
+Color((math.Random().nextDouble() * 0xFFFFFF).toInt()).withOpacity(1.0)
 ```
