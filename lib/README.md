@@ -327,6 +327,8 @@ print(a);//[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 ### Stateful与State
 当该 widget 的父 widget 重建时，父 widget 首先会创建一个 ShoppingList（Stateful） 的实例，
 但是框架会复用之前创建的 _ShoppingListState(State)，而不会重新调用 createState。
+https://flutter.cn/docs/development/ui/widgets-intro
+
 
 ### map方法的使用
 ```dart
