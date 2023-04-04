@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_demo/resizable_layout/component_view.dart';
+import 'dart:math' as math;
 
 void main()=> runApp(MyApp());
 
@@ -28,23 +29,45 @@ class _HomePageState extends State<HomePage>{
   bool clickRightPanelBar=false;
   bool clickLeftPanelBar=false;
 
+  double centerPanelBar_height=30;
+  double centerPanel_minWidth=300;
+  double centerPanel_maxWidth=600;
+  double centerPanel_maxHeight=600;
+
   double rightPanel_width=300;
   double rightPanelBar_width=40;
 
   double leftPanel_width=300;
   double leftPanelBar_width=40;
 
-  double bottomPanel_width=40;
-  double bottomPanelBar_width=30;
+  double bottomPanelBar_height=30;
+  double bottomPanel_height=40;
 
-  double VerticalDivider_width=1;
-  double HorizontalDivider_height=1;
+  double PaneVerticalDivider_width=1;
+  double PaneHorizontalDivider_height=1;
 
   // late double rightPanel_x;
   // late double leftPanel_x;
 
+  List<Panel> PanelList=[];
+
+  void horizontalSplit(){
+
+  }
+
+  void verticalSplit(){
+    setState(() {
+    });
+  }
+
+  @override
+  void initState() {
+  }
+
   @override
   Widget build(BuildContext context) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
+
     return LayoutBuilder(
         builder: (context, constraints) => ConstrainedBox(
           constraints: BoxConstraints.expand(),
@@ -57,7 +80,7 @@ class _HomePageState extends State<HomePage>{
               // left panel buttonBar
               Positioned(
                 top: 0,
-                bottom: bottomPanelBar_width,
+                bottom: bottomPanelBar_height,
                 left: 0,
                 width: leftPanelBar_width,
                 child: Container(
@@ -148,11 +171,11 @@ class _HomePageState extends State<HomePage>{
                 ),
               ),
 
-              clickLeftPanelBar? Positioned(
+              clickLeftPanelBar ? Positioned(
                   top:0,
-                  bottom:bottomPanelBar_width,
+                  bottom:bottomPanelBar_height,
                   left: leftPanelBar_width,
-                  width: leftPanel_width+VerticalDivider_width,
+                  width: leftPanel_width+PaneVerticalDivider_width,
                   child: Row(
                     children: [
 
@@ -160,8 +183,8 @@ class _HomePageState extends State<HomePage>{
                       Container(color: Colors.red,width: leftPanel_width,),
 
                       // resizeLeftRight divider
-                      VerticalDivider(
-                        VerticalDivider_width:VerticalDivider_width,
+                      PaneVerticalDivider(
+                        PaneVerticalDivider_width:PaneVerticalDivider_width,
                         onDrag: (dx){
                           // print("leftPanel_width+dx: ${leftPanel_width+dx}");
                           // print("leftPanel_width: ${leftPanel_width}");
@@ -169,8 +192,8 @@ class _HomePageState extends State<HomePage>{
                           setState(() {
                             if(leftPanel_width+dx<=1){
                               leftPanel_width=1;
-                            } else if(leftPanelBar_width+leftPanel_width+VerticalDivider_width+dx>=constraints.maxWidth-VerticalDivider_width-rightPanel_width-rightPanelBar_width){
-                              leftPanel_width=constraints.maxWidth-VerticalDivider_width-rightPanel_width-rightPanelBar_width-1-leftPanelBar_width-VerticalDivider_width;
+                            } else if(leftPanelBar_width+leftPanel_width+PaneVerticalDivider_width+dx>=constraints.maxWidth-PaneVerticalDivider_width-rightPanel_width-rightPanelBar_width){
+                              leftPanel_width=constraints.maxWidth-PaneVerticalDivider_width-rightPanel_width-rightPanelBar_width-1-leftPanelBar_width-PaneVerticalDivider_width;
                             } else{
                                 leftPanel_width+=dx;
                             }
@@ -178,65 +201,78 @@ class _HomePageState extends State<HomePage>{
                         },
                         onHover: (double width){
                           setState(() {
-                            VerticalDivider_width=width;
+                            PaneVerticalDivider_width=width;
                           });
                         },
                       ),
 
                     ],
                   )
-              ):Positioned(
+              ) : Positioned(
                 top:0,
-                bottom:bottomPanelBar_width,
+                bottom:bottomPanelBar_height,
                 left: leftPanelBar_width,
                 width: 0,
                 child: Container(),
               ),
 
-
               // center content panel
               Positioned(
                 top: 0,
-                bottom: bottomPanelBar_width,
-                left: clickLeftPanelBar?leftPanelBar_width+leftPanel_width+VerticalDivider_width:leftPanelBar_width,
-                right: clickRightPanelBar?rightPanelBar_width+rightPanel_width+VerticalDivider_width:rightPanelBar_width,
-                child: Column(
+                bottom: bottomPanelBar_height,
+                left: clickLeftPanelBar?leftPanelBar_width+leftPanel_width+PaneVerticalDivider_width:leftPanelBar_width,
+                right: clickRightPanelBar?rightPanelBar_width+rightPanel_width+PaneVerticalDivider_width:rightPanelBar_width,
+                child: Stack(
                   children: [
-                    Row(
-                      children: [
-                        Spacer(flex: 1,),
-                        IconButton(
-                          onPressed: (){},
-                          icon: Icon(Icons.add_card,),
-                          padding: EdgeInsets.zero,
-                          
-                        ),
-                        IconButton(onPressed: (){}, icon: Icon(Icons.more_horiz), padding: EdgeInsets.zero,)
-                      ],
+                    Positioned(
+                      top:0,
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      child:
+                        Builder(builder: (context){
+                          centerPanel_maxHeight=constraints.maxHeight-bottomPanelBar_height;
+                          centerPanel_maxWidth=constraints.maxWidth;
+                          if(clickLeftPanelBar){
+                            centerPanel_maxWidth-=leftPanelBar_width-leftPanel_width-PaneVerticalDivider_width;
+                          } else{
+                            centerPanel_maxWidth-=leftPanelBar_width;
+                          }
+
+                          if(clickRightPanelBar){
+                            centerPanel_maxWidth-=rightPanelBar_width-rightPanel_width-PaneVerticalDivider_width;
+                          } else{
+                            centerPanel_maxWidth-=rightPanelBar_width;
+                          }
+
+                          return Panel(
+                              width: centerPanel_maxWidth,
+                              height: centerPanel_maxHeight
+                          );
+                        }),
                     ),
-                    Container(color: Colors.green,),
                   ],
-                )
+                ),
+
               ),
 
-
-              clickRightPanelBar? Positioned(
+              clickRightPanelBar ? Positioned(
                   top: 0,
-                  bottom: bottomPanelBar_width,
+                  bottom: bottomPanelBar_height,
                   right: 0,
-                  width: VerticalDivider_width+rightPanel_width+rightPanelBar_width,
+                  width: PaneVerticalDivider_width+rightPanel_width+rightPanelBar_width,
                   child: Row(
                     children: [
 
                       // resizeLeftRight divider
-                      VerticalDivider(
-                        VerticalDivider_width:VerticalDivider_width,
+                      PaneVerticalDivider(
+                        PaneVerticalDivider_width:PaneVerticalDivider_width,
                         onDrag: (dx){
                           setState(() {
                             if(rightPanel_width-dx<=1){
                               rightPanel_width=1;
-                            }else if(constraints.maxWidth-VerticalDivider_width-(rightPanel_width-dx)-rightPanelBar_width<=leftPanelBar_width+leftPanel_width+VerticalDivider_width){
-                              rightPanel_width=constraints.maxWidth-leftPanelBar_width-leftPanel_width-VerticalDivider_width-rightPanelBar_width-VerticalDivider_width-1;
+                            }else if(constraints.maxWidth-PaneVerticalDivider_width-(rightPanel_width-dx)-rightPanelBar_width<=leftPanelBar_width+leftPanel_width+PaneVerticalDivider_width){
+                              rightPanel_width=constraints.maxWidth-leftPanelBar_width-leftPanel_width-PaneVerticalDivider_width-rightPanelBar_width-PaneVerticalDivider_width-1;
                             } else{
                               rightPanel_width-=dx;
                             }
@@ -244,17 +280,18 @@ class _HomePageState extends State<HomePage>{
                         },
                         onHover: (double width){
                           setState(() {
-                            VerticalDivider_width=width;
+                            PaneVerticalDivider_width=width;
                           });
                         },
                       ),
 
                       // right panel
                       Container(color: Colors.blue, width: rightPanel_width,),
-                    ],),
+                    ],
+                  ),
               ) : Positioned(
                 top:0,
-                bottom:bottomPanelBar_width,
+                bottom:bottomPanelBar_height,
                 width: 0,
                 right: rightPanelBar_width,
                 child: Container(),
@@ -263,7 +300,7 @@ class _HomePageState extends State<HomePage>{
               // right panel buttonBar
               Positioned(
                 top: 0,
-                bottom: bottomPanelBar_width,
+                bottom: bottomPanelBar_height,
                 right: 0,
                 width: rightPanelBar_width,
                 child: Container(color: Colors.grey.shade300,width: rightPanelBar_width,
@@ -355,7 +392,7 @@ class _HomePageState extends State<HomePage>{
               // bottom window
               Positioned(
                 bottom: 0,
-                height: bottomPanelBar_width,
+                height: bottomPanelBar_height,
                 left: 0,
                 right: 0,
                 child: Container(
@@ -409,89 +446,4 @@ class _HomePageState extends State<HomePage>{
 
 
 
-// resize LeftRight divider
-class VerticalDivider extends StatefulWidget{
 
-  final Function ? onDrag;
-  final Function ? onHover;
-  final double VerticalDivider_width;
-  const VerticalDivider({super.key, this.onDrag, this.onHover, this.VerticalDivider_width=1});
-
-  @override
-  State<VerticalDivider> createState() {
-    return _VerticalDividerState();
-  }
-
-}
-
-class _VerticalDividerState extends State<VerticalDivider>{
-
-  late double start_x;
-  bool isHovered=false;
-
-  @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      onHover: (event){
-          isHovered=true;
-          widget.onHover!(2.0);
-        },
-      onEnter: (event){
-        isHovered=true;
-        widget.onHover!(2.0);
-      },
-      onExit: (event){
-        isHovered=false;
-        widget.onHover!(widget.VerticalDivider_width);
-      },
-      cursor: SystemMouseCursors.resizeLeftRight,
-      child: GestureDetector(
-        onHorizontalDragStart: (details){
-          start_x=details.globalPosition.dx;
-        },
-        onHorizontalDragUpdate: (details){
-          var dx=details.delta.dx;
-          widget.onDrag!(dx);
-        },
-        child: Container(
-          width: isHovered?widget.VerticalDivider_width:widget.VerticalDivider_width,
-          color: isHovered?CupertinoColors.activeBlue:Colors.transparent,
-        ),
-      ),
-    );
-  }
-
-}
-
-// resize TopBottom divider
-class HorizontalDivider extends StatefulWidget{
-  final Function ? onDrag;
-  final double HorizontalDivider_height;
-  const HorizontalDivider({super.key,this.onDrag,this.HorizontalDivider_height=1});
-
-  @override
-  _HorizontalDividerState createState() {
-    return _HorizontalDividerState();
-  }
-
-}
-
-class _HorizontalDividerState extends State<HorizontalDivider>{
-  @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.resizeLeftRight,
-      child: GestureDetector(
-        onVerticalDragStart: (details){},
-        onVerticalDragUpdate: (details){
-          details.delta.dy;
-        },
-        child: Container(
-          height: widget.HorizontalDivider_height,
-          color: Colors.transparent,
-        ),
-      ),
-    );
-  }
-
-}
