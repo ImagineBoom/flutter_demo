@@ -570,3 +570,20 @@ icon: Transform.rotate(angle: math.pi/2, child: Icon(Icons.splitscreen,),),
 ```dart
 Color((math.Random().nextDouble() * 0xFFFFFF).toInt()).withOpacity(1.0)
 ```
+
+### Builder组件
+使用Builder组件，可以方便的添加逻辑
+```dart
+Center(
+  child: Builder(
+    builder: (context) {
+      // any logic needed...
+      final condition = _whateverLogicNeeded();
+      
+      return condition
+          ? Container();
+          : Center();
+    }
+  )
+)
+```
