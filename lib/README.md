@@ -508,6 +508,11 @@ class _VerticalDividerState extends State<VerticalDivider>{
 
 ```
 
+### Function类型
+```dart
+final Function(String signature) splitUp;
+```
+
 ```dart
   VerticalDivider(
     VerticalDivider_width:VerticalDivider_width,
