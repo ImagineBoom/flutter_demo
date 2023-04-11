@@ -527,6 +527,7 @@ final Function(String signature) splitUp;
 ### Stack与Positioned
 - Positioned父级必须是Stack
 - Positioned的top、bottom、left、right都是相对于Stack而言的
+- top、bottom、left、right 和 width、height只能选一组设置
 ```dart
 Stack(
   children: [
@@ -591,4 +592,34 @@ Center(
     }
   )
 )
+```
+
+### 对象的引用
+person变量包含了对Person对象的引用，我们通过它来访问和修改Person对象的属性，或者调用它的方法。
+如果我们将person变量赋值给另一个变量，那么这两个变量都将引用同一个Person对象。
+```dart
+class Person {
+  late String name;
+  late int age;
+
+  void sayHello() {
+    print('$name - $age ');
+  }
+}
+
+Person find(Person p){
+  return p;
+}
+
+void main() {
+  var person = Person();
+  person.name = 'Alice';
+  person.age = 25;
+  // 使用引用修改
+  var pp=find(person);
+  pp.name="John";
+  
+  pp.age=22;
+  person.sayHello(); // 输出 John - 22 
+}
 ```
