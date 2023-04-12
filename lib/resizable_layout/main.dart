@@ -4,6 +4,8 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_demo/resizable_layout/component_view.dart';
 import 'dart:math' as math;
 
+import 'package:flutter_demo/resizable_layout/view_engine.dart';
+
 void main()=> runApp(MyApp());
 
 class MyApp extends StatelessWidget{
@@ -48,9 +50,6 @@ class _HomePageState extends State<HomePage>{
 
   // late double rightPanel_x;
   // late double leftPanel_x;
-
-  List<Panel> PanelList=[];
-
   void horizontalSplit(){
 
   }
@@ -244,10 +243,10 @@ class _HomePageState extends State<HomePage>{
                           } else{
                             centerPanel_maxWidth-=rightPanelBar_width;
                           }
-
-                          return Panel(
-                              width: centerPanel_maxWidth,
-                              height: centerPanel_maxHeight
+                          print("centerPanel_maxHeight=${centerPanel_maxHeight}");
+                          return PanelTree(
+                            maxWidth: centerPanel_maxWidth,
+                            maxHeight: centerPanel_maxHeight,
                           );
                         }),
                     ),
