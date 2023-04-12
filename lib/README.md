@@ -627,3 +627,43 @@ void main() {
 - `?`：定义时使用表示可空类型
 - `!.`：空值断言操作符, 用于将左侧的表达式转换成其对应的非空类型
 - `?.`：避空运算符，根据运行时的语义化规定，如果接收者是 null，那么右侧的属性访问就会被跳过，表达式将被作为 null 看待。
+- `??`: if null运算符，左边为null时，使用右边的值
+
+### dart对象的copy
+dart将一个对象直接赋值给另一个对象，获得的是引用，因此需要深拷贝时需要使用以下方法
+```dart
+class PoS {
+  // position
+  double top, left;
+  double ?bottom, right;
+
+  // size
+  double ?width, height;
+  //...
+}
+```
+- 构造函数
+```dart
+  PoS.fromObj(PoS pos):
+    top=pos.top,
+    left=pos.left,
+    right=pos.right,
+    bottom=pos.bottom,
+    width=pos.width,
+    height=pos.height;
+
+```
+- copyWith方法
+```dart
+  // use copyWith deep copy, and select assign
+PoS copyWith({double? top, double? left, double? bottom, double? right, double? width, double? height}){
+  return PoS(
+    top: top ?? this.top,
+    left: left ?? this.left,
+    right: right ?? this.right,
+    bottom: bottom ?? this.bottom,
+    width: width ?? this.width,
+    height: height ?? this.height,
+  );
+}
+```
