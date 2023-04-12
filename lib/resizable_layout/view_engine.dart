@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
@@ -73,35 +75,68 @@ class PanelWidgetState extends State<PanelWidget> {
 }
 
 class PanelHashTableElement{
-
+  // current split action state
   SplitDirection? state;
 
-  // position
-  double top,left;
-  double ?bottom,right;
-  // size
-  double ?width, height;
+  PoS pos;
 
   PanelWidget content;
 
-  PanelHashTableElement({required this.content, this.state,
-    this.height,  this.width,
-    required this.left, this.right,
-    required this.top, this.bottom});
+  PanelHashTableElement({
+    this.state,
+    required this.pos,
+    required this.content,
+  });
   
 }
 
 // panelHashTable use PanelNode's signature as key
 var panelHashTable = <String, PanelHashTableElement>{};
 
-class PanelNode{
+// Position and Size
+class PoS{
+  // position
+  double top,left;
+  double ?bottom,right;
+  // size
+  double ?width, height;
 
+  PoS({required this.top, required this.left, this.bottom, this.right, this.width, this.height});
+  PoS.fromObj(PoS pos):
+    top=pos.top,
+    left=pos.left,
+    right=pos.right,
+    bottom=pos.bottom,
+    width=pos.width,
+    height=pos.height;
+
+  // use copyWith deep copy, and select assign
+  PoS copyWith({double? top, double? left, double? bottom, double? right, double? width, double? height}){
+    return PoS(
+      top: top ?? this.top,
+      left: left ?? this.left,
+      right: right ?? this.right,
+      bottom: bottom ?? this.bottom,
+      width: width ?? this.width,
+      height: height ?? this.height,
+    );
+  }
+
+  @override
+  String toString() {
+    return "top,left,bottom,right={$top, $left, $bottom, $right}, width,height={$width, $height}";
+  }
+}
+
+class PanelNode{
   String signature;
+  SplitDirection? state;
+  PoS pos;
   PanelNode? parent;
   PanelNode? child1;
   PanelNode? child2;
 
-  PanelNode(this.signature,{this.child1,this.child2,this.parent});
+  PanelNode(this.signature, this.pos, {this.state, this.child1, this.child2, this.parent});
 
 }
 
@@ -136,6 +171,7 @@ class PanelTreeState extends State<PanelTree>{
   }
 
   // according it's signature
+  // find the leaf at the end
   PanelNode? findLeafNode(String signature, PanelNode? node){
     // print("===============================================================");
     // print("Node       =${node?.signature}");
@@ -165,8 +201,22 @@ class PanelTreeState extends State<PanelTree>{
   }
 
   // according it's signature
-  PanelNode? findNodeBrother(String signature, PanelNode? node){
-    var leafNode=findLeafNode(signature,node);
+  // find the node at the begin
+  PanelNode? findBeginNode(String signature, PanelNode? node){
+    // print("===============================================================");
+    // print("Node       =${node?.signature}");
+    // print("Node.child1=${node?.child1?.signature}");
+    // print("Node.child2=${node?.child2?.signature}");
+    // print("===============================================================");
+    PanelNode? pn=node;
+    for(; pn?.parent?.signature==node?.signature; pn=pn?.parent){}
+
+    return pn;
+  }
+
+  // according it's signature
+  PanelNode? findNodeBrother(String signature){
+    var leafNode=findLeafNode(signature,root);
     if(leafNode!=null){
       if(leafNode.parent?.child1?.signature != signature){
         return leafNode.parent?.child1;
@@ -178,36 +228,139 @@ class PanelTreeState extends State<PanelTree>{
   }
 
   // according it's signature
-  void splitFromTree(String signature){
+  // 1. remove the node and it's brother node
+  // 2. replace all nodes signature with the provided node's brother node's signature
+  void removeNodeInTree(PanelNode? node){
+    if(node!=null){
+      // find brother and parent nodes
+      PanelNode? brotherNode = findNodeBrother(node.signature);
+      PanelNode? parentNode = brotherNode?.parent;
+
+      // 1. remove the two brothers
+      parentNode?.child1=null;
+      parentNode?.child2=null;
+
+      // 2. 回溯 parents node
+      for(PanelNode? pn=node.parent; pn?.signature==node.signature; pn=pn?.parent){
+        if(brotherNode!=null){
+          pn?.signature=brotherNode.signature;
+        }
+        // print("pn.signature=${pn?.signature}");
+      }
+
+    }
+  }
+
+  // according it's signature
+  void splitFromTree(PanelNode child){
+
+    Queue<PanelNode> stack=Queue();
+
+    // init the root PoS in hash table
+    if(child.parent==null){
+      // is root
+      panelHashTable[child.signature]?.pos.top=0;
+      panelHashTable[child.signature]?.pos.bottom=0;
+      panelHashTable[child.signature]?.pos.left=0;
+      panelHashTable[child.signature]?.pos.right=0;
+      panelHashTable[child.signature]?.pos.height=widget.maxHeight;
+      panelHashTable[child.signature]?.pos.width=widget.maxWidth;
+    }else{
+
+    }
+
+    // init the stack
+    stack.addLast(child);
+
+    // pre-order traversal algorithm for binary trees
+    while(stack.isNotEmpty){
+      PanelNode curNode=stack.removeLast();
+      if(curNode.child1==null || curNode.child2==null){
+        continue;
+      }
+
+      if(curNode.child1!=null && curNode.child2!=null){
+
+        if(panelHashTable[curNode.signature]?.state==SplitDirection.vertical){
+          // child1
+          panelHashTable[curNode.child1?.signature]?.pos.width=panelHashTable[curNode.signature]!.pos.width!/2;
+          panelHashTable[curNode.child1?.signature]?.pos.height=panelHashTable[curNode.signature]!.pos.height;
+          panelHashTable[curNode.child1?.signature]?.pos.top=panelHashTable[curNode.signature]!.pos.top;
+          panelHashTable[curNode.child1?.signature]?.pos.bottom=panelHashTable[curNode.signature]!.pos.bottom! + panelHashTable[curNode.signature]!.pos.height!/2;
+          panelHashTable[curNode.child1?.signature]?.pos.left=panelHashTable[curNode.signature]!.pos.left;
+          panelHashTable[curNode.child1?.signature]?.pos.right=panelHashTable[curNode.signature]!.pos.right;
+          // child2
+          panelHashTable[curNode.child2?.signature]?.pos.width=panelHashTable[curNode.signature]?.pos.width;
+          panelHashTable[curNode.child2?.signature]?.pos.height=panelHashTable[curNode.signature]!.pos.height!/2;
+          panelHashTable[curNode.child2?.signature]?.pos.top=panelHashTable[curNode.signature]!.pos.top + panelHashTable[curNode.signature]!.pos.height!/2;
+          panelHashTable[curNode.child2?.signature]?.pos.bottom=panelHashTable[curNode.signature]!.pos.bottom!;
+          panelHashTable[curNode.child2?.signature]?.pos.left=panelHashTable[curNode.signature]!.pos.left;
+          panelHashTable[curNode.child2?.signature]?.pos.right=panelHashTable[curNode.signature]!.pos.right;
+
+
+        }else if(panelHashTable[curNode.signature]?.state==SplitDirection.horizontal){
+          // child1
+          panelHashTable[curNode.child1?.signature]?.pos.width=panelHashTable[curNode.signature]?.pos.width;
+          panelHashTable[curNode.child1?.signature]?.pos.height=panelHashTable[curNode.signature]!.pos.height!/2;
+          panelHashTable[curNode.child1?.signature]?.pos.top=panelHashTable[curNode.signature]!.pos.top;
+          panelHashTable[curNode.child1?.signature]?.pos.bottom=panelHashTable[curNode.signature]!.pos.bottom! + panelHashTable[curNode.signature]!.pos.height!/2;
+          panelHashTable[curNode.child1?.signature]?.pos.left=panelHashTable[curNode.signature]!.pos.left;
+          panelHashTable[curNode.child1?.signature]?.pos.right=panelHashTable[curNode.signature]!.pos.right;
+          // child2
+          panelHashTable[curNode.child2?.signature]?.pos.width=panelHashTable[curNode.signature]?.pos.width;
+          panelHashTable[curNode.child2?.signature]?.pos.height=panelHashTable[curNode.signature]!.pos.height!/2;
+          panelHashTable[curNode.child2?.signature]?.pos.top=panelHashTable[curNode.signature]!.pos.top + panelHashTable[curNode.signature]!.pos.height!/2;
+          panelHashTable[curNode.child2?.signature]?.pos.bottom=panelHashTable[curNode.signature]!.pos.bottom!;
+          panelHashTable[curNode.child2?.signature]?.pos.left=panelHashTable[curNode.signature]!.pos.left;
+          panelHashTable[curNode.child2?.signature]?.pos.right=panelHashTable[curNode.signature]!.pos.right;
+
+        }
+
+      }
+
+    }
 
   }
 
+  // child1: old node, child2: new node
   void splitUp(String signature){
     print("splitUp ${signature}");
   }
 
+  // child1: old node, child2: new node
   void splitDown(String signature){
     print("splitDown ${signature}");
     // 1. sign
     String newSignature=widget.sign();
     print("newSignature=$newSignature");
 
+    // calculate PoS1 and PoS2
+
+    PoS pos1 = panelHashTable[signature]!.pos.copyWith(
+      bottom: panelHashTable[signature]!.pos.bottom!+panelHashTable[signature]!.pos.height!/2,
+      height: panelHashTable[signature]!.pos.height!/2
+    );
+
+    PoS pos2 = panelHashTable[signature]!.pos.copyWith(
+      top: panelHashTable[signature]!.pos.top+panelHashTable[signature]!.pos.height!/2,
+      height: panelHashTable[signature]!.pos.height!/2,
+    );
+
+    // PoS pos1 = PoS.fromObj(panelHashTable[signature]!.pos);
+    // pos1.bottom = panelHashTable[signature]!.pos.bottom!+panelHashTable[signature]!.pos.height!/2;
+    // pos1.height = panelHashTable[signature]!.pos.height!/2;
+    //
+    // PoS pos2 = PoS.fromObj(panelHashTable[signature]!.pos);
+    // pos2.top=panelHashTable[signature]!.pos.top+panelHashTable[signature]!.pos.height!/2;
+    // pos2.height=panelHashTable[signature]!.pos.height!/2;
+
+
     setState(() {
       // 2. fill hash table
-      var width=panelHashTable[signature]!.width;
-      var height=panelHashTable[signature]!.height!/2;
-
-      print("new top=${panelHashTable[signature]!.bottom!+height}");
-      print("new bot=${panelHashTable[signature]!.bottom}");
       // add new element
       panelHashTable[newSignature]=PanelHashTableElement(
         state: SplitDirection.horizontal,
-        top: panelHashTable[signature]!.top!+height,
-        bottom: panelHashTable[signature]!.bottom,
-        left: panelHashTable[signature]!.left,
-        right: panelHashTable[signature]!.right,
-        width: width,
-        height: height,
+        pos: pos2.copyWith(),
         content: PanelWidget(
           signature: newSignature,
           splitUp: splitUp,
@@ -218,51 +371,65 @@ class PanelTreeState extends State<PanelTree>{
         )
       );
 
-      print("old top=${panelHashTable[signature]!.top!}");
-      print("old bot=${panelHashTable[signature]!.bottom!+height}");
       // modify old element
       panelHashTable[signature]!.state=SplitDirection.horizontal;
-      panelHashTable[signature]!.height=height;
-      panelHashTable[signature]!.bottom=panelHashTable[signature]!.bottom!+height;
+      panelHashTable[signature]!.pos.height=pos1.height;
+      panelHashTable[signature]!.pos.bottom=pos1.bottom;
 
       // 3. complete node tree
       PanelNode? node=findLeafNode(signature,root);
       if(node!=null){
-        var panelNode1=PanelNode(signature);panelNode1.parent=node;
-        var panelNode2=PanelNode(newSignature);panelNode2.parent=node;
+        var panelNode1=PanelNode(signature,pos1.copyWith()); panelNode1.parent=node;
+        var panelNode2=PanelNode(newSignature,pos2.copyWith()); panelNode2.parent=node;
+        node.state=SplitDirection.horizontal;
         node.child1=panelNode1;
         node.child2=panelNode2;
       }
+      print("node        PoS=${node?.pos}");
+      print("node.child1 PoS=${node?.child1?.pos}");
+      print("node.child2 PoS=${node?.child2?.pos}");
+
     });
-    print("");
   }
 
+  // child1: old node, child2: new node
   void splitLeft(String signature){
     print("splitLeft ${signature}");
 
   }
 
+  // child1: old node, child2: new node
   void splitRight(String signature){
     print("splitRight ${signature}");
     // 1. sign
     String newSignature=widget.sign();
     print("newSignature=$newSignature");
 
+    // calculate PoS1 and PoS2
+    PoS pos1=panelHashTable[signature]!.pos.copyWith(
+      right: panelHashTable[signature]!.pos.right!+panelHashTable[signature]!.pos.width!/2,
+      width: panelHashTable[signature]!.pos.width!/2
+    );
+
+    PoS pos2=panelHashTable[signature]!.pos.copyWith(
+      left: panelHashTable[signature]!.pos.left+panelHashTable[signature]!.pos.width!/2,
+      width: panelHashTable[signature]!.pos.width!/2,
+    );
+
+    // PoS pos1=PoS.fromObj(panelHashTable[signature]!.pos);
+    // pos1.right=panelHashTable[signature]!.pos.right!+panelHashTable[signature]!.pos.width!/2;
+    // pos1.width=panelHashTable[signature]!.pos.width!/2;
+    //
+    // PoS pos2=PoS.fromObj(panelHashTable[signature]!.pos);
+    // pos2.left=panelHashTable[signature]!.pos.left+panelHashTable[signature]!.pos.width!/2;
+    // pos2.width=panelHashTable[signature]!.pos.width!/2;
+
     setState(() {
       // 2. fill hash table
-      var width=panelHashTable[signature]!.width!/2;
-      var height=panelHashTable[signature]!.height;
 
-      print("new left =${panelHashTable[signature]!.left!+width}");
-      print("new right=${panelHashTable[signature]!.right}");
       // add new element
       panelHashTable[newSignature]=PanelHashTableElement(
-        top: panelHashTable[signature]!.top!,
-        bottom: panelHashTable[signature]!.bottom,
-        left: panelHashTable[signature]!.left!+width,
-        right: panelHashTable[signature]!.right,
-        width: width,
-        height: height,
+        pos: pos2.copyWith(),
         content: PanelWidget(
           signature: newSignature,
           splitUp: splitUp,
@@ -273,21 +440,25 @@ class PanelTreeState extends State<PanelTree>{
         )
       );
 
-      print("old left =${panelHashTable[signature]!.left!}");
-      print("old right=${panelHashTable[signature]!.right!+width}");
       // modify old element
       panelHashTable[signature]!.state=SplitDirection.vertical;
-      panelHashTable[signature]!.width=width;
-      panelHashTable[signature]!.right=panelHashTable[signature]!.right!+width;
+      panelHashTable[signature]!.pos.width=pos1.width;
+      panelHashTable[signature]!.pos.right=pos1.right;
 
       // 3. complete node tree
       PanelNode? node=findLeafNode(signature,root);
+
       if(node!=null){
-        var panelNode1=PanelNode(signature);panelNode1.parent=node;
-        var panelNode2=PanelNode(newSignature);panelNode2.parent=node;
+        var panelNode1=PanelNode(signature, pos1.copyWith()); panelNode1.parent=node;
+        var panelNode2=PanelNode(newSignature, pos2.copyWith()); panelNode2.parent=node;
+        node.state=SplitDirection.vertical;
         node.child1=panelNode1;
         node.child2=panelNode2;
       }
+
+      print("node        PoS=${node?.pos}");
+      print("node.child1 PoS=${node?.child1?.pos}");
+      print("node.child2 PoS=${node?.child2?.pos}");
 
     });
     print("");
@@ -298,8 +469,17 @@ class PanelTreeState extends State<PanelTree>{
     print("close ${signature}");
 
     // 1. find brother and parent nodes
-    PanelNode? brotherNode = findNodeBrother(signature, root);
+    PanelNode? node=findLeafNode(signature, root);
+    PanelNode? brotherNode = findNodeBrother(signature);
     PanelNode? parentNode = brotherNode?.parent;
+
+    print("node?.signature=${node?.signature}");
+    print("brotherNode?.signature=${brotherNode?.signature}");
+    print("parentNode?.signature=${parentNode?.signature}");
+    print("node PoS       =${node?.pos}");
+    print("brotherNode PoS=${brotherNode?.pos}");
+    print("parentNode PoS =${parentNode?.pos}");
+
     setState(() {
       if(brotherNode == null){
         print("is root node");
@@ -308,35 +488,23 @@ class PanelTreeState extends State<PanelTree>{
       }else{
         // not root node
 
+        // 2. update node tree
+        // remove the node
+        removeNodeInTree(node);
 
-        // 2. update hash table
-        // resize brother Tree element
-        if(panelHashTable[parentNode?.signature]?.state == SplitDirection.vertical){
-          if(panelHashTable.containsKey(brotherNode.signature)){
-            panelHashTable[brotherNode.signature]?.width = panelHashTable[brotherNode.signature]!.width! *2;
-            panelHashTable[brotherNode.signature]?.left = panelHashTable[parentNode?.signature]!.left;
-            panelHashTable[brotherNode.signature]?.right =  math.min(panelHashTable[signature]!.right!, panelHashTable[brotherNode.signature]!.right!);
-          }
-          print("close state=${panelHashTable[parentNode?.signature]?.state}");
-        }else if(panelHashTable[parentNode?.signature]?.state == SplitDirection.horizontal){
-          if(panelHashTable.containsKey(brotherNode.signature)){
-            panelHashTable[brotherNode.signature]?.height = panelHashTable[brotherNode.signature]!.height! *2;
-            panelHashTable[brotherNode.signature]?.top = panelHashTable[parentNode?.signature]!.top;
-            panelHashTable[brotherNode.signature]?.bottom =  math.min(panelHashTable[signature]!.bottom!, panelHashTable[brotherNode.signature]!.bottom!);
-          }
-          print("close state=${panelHashTable[parentNode?.signature]?.state}");
+        // 3. update hashtable from node tree
 
+        if(panelHashTable.containsKey(signature)){
+          panelHashTable[brotherNode.signature]?.state = parentNode!.state;
+          panelHashTable[brotherNode.signature]?.pos = parentNode!.pos.copyWith();
+          panelHashTable.remove(signature);
         }
-        // delete this element
-        panelHashTable.remove(signature);
 
-        // 3. update node tree
-
-        // replace their parent signature with brother's signature
-        parentNode?.signature=brotherNode.signature;
-        // remove the two brothers
-        parentNode?.child1=null;
-        parentNode?.child2=null;
+        // update hash table element's position and size
+        // PanelNode? beginNode=findBeginNode(signature, node);
+        // if(beginNode!=null){
+        //   splitFromTree(beginNode);
+        // }
 
       }
 
@@ -349,15 +517,17 @@ class PanelTreeState extends State<PanelTree>{
     super.initState();
     String signature=widget.sign();
     print("signature=$signature");
-    var panelNode=PanelNode(signature);
-    root=panelNode;
+    PoS pos=PoS(
+      top: 0.0,
+      bottom: 0.0,
+      left: 0.0,
+      right: 0.0,
+      width: widget.maxWidth,
+      height: widget.maxHeight,
+    );
+    root=PanelNode(signature, pos.copyWith());
     panelHashTable[signature]=PanelHashTableElement(
-        top: 0.0,
-        bottom: 0.0,
-        left: 0.0,
-        right: 0.0,
-        width: widget.maxWidth,
-        height: widget.maxHeight,
+        pos: pos.copyWith(),
         content: PanelWidget(
           signature: signature,
           splitUp: splitUp,
@@ -380,12 +550,12 @@ class PanelTreeState extends State<PanelTree>{
         // print("panelHashTable[k]?.content.right,=${panelHashTable[k]?.content.right}");
         // print("panelHashTable[k]?.content.width=${panelHashTable[k]?.content.width}");
         return Positioned(
-          left: panelHashTable[k]?.left,
-          // right: panelHashTable[k]?.right,
-          top: panelHashTable[k]?.top,
-          // bottom: panelHashTable[k]?.bottom,
-          width: panelHashTable[k]?.width,
-          height: panelHashTable[k]?.height,
+          left: panelHashTable[k]?.pos.left,
+          // right: panelHashTable[k]?.pos.right,
+          top: panelHashTable[k]?.pos.top,
+          // bottom: panelHashTable[k]?.pos.bottom,
+          width: panelHashTable[k]?.pos.width,
+          height: panelHashTable[k]?.pos.height,
           child: panelHashTable[k]!.content,
         );
       }).toList()
