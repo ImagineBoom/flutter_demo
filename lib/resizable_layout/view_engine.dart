@@ -289,11 +289,12 @@ class PanelTreeState extends State<PanelTree>{
           }
         }else{
           root=brotherNode!;
+          brotherNode.parent=null;
         }
 
         //  cut off old relation
         node.parent=null;
-        brotherNode?.parent=null;
+
 
         // splitFromTree
         splitFromTree(brotherNode!);
@@ -314,6 +315,8 @@ class PanelTreeState extends State<PanelTree>{
     // pre-order traversal algorithm for binary trees
     while(stack.isNotEmpty){
       PanelNode curNode=stack.removeLast();
+      panelHashTable[curNode.signature]?.pos = curNode.pos.copyWith();
+
       if(curNode.child1==null || curNode.child2==null){
         continue;
       }
@@ -537,7 +540,7 @@ class PanelTreeState extends State<PanelTree>{
         // 3. update hashtable from node tree
 
         if(panelHashTable.containsKey(signature)){
-          panelHashTable[brotherNode.signature]?.state = parentNode!.state;
+          panelHashTable[brotherNode.signature]?.state = parentNode?.state;
           panelHashTable[brotherNode.signature]?.pos = parentNode!.pos.copyWith();
           panelHashTable.remove(signature);
         }
@@ -579,6 +582,21 @@ class PanelTreeState extends State<PanelTree>{
           close: close,
         )
     );
+  }
+
+  @override
+  void didUpdateWidget(covariant PanelTree oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    print("${widget.maxWidth},${widget.maxHeight}");
+    root.pos= PoS(
+      top: 0.0,
+      bottom: 0.0,
+      left: 0.0,
+      right: 0.0,
+      width: widget.maxWidth,
+      height: widget.maxHeight,
+    );
+    splitFromTree(root);
   }
 
   @override
