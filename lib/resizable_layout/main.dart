@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_demo/resizable_layout/component_view.dart';
-import 'dart:math' as math;
 
 import 'package:flutter_demo/resizable_layout/view_engine.dart';
 
@@ -233,17 +232,19 @@ class _HomePageState extends State<HomePage>{
                           centerPanel_maxHeight=constraints.maxHeight-bottomPanelBar_height;
                           centerPanel_maxWidth=constraints.maxWidth;
                           if(clickLeftPanelBar){
-                            centerPanel_maxWidth-=leftPanelBar_width-leftPanel_width-PaneVerticalDivider_width;
+                            centerPanel_maxWidth-=(leftPanelBar_width+leftPanel_width+PaneVerticalDivider_width);
                           } else{
                             centerPanel_maxWidth-=leftPanelBar_width;
                           }
 
                           if(clickRightPanelBar){
-                            centerPanel_maxWidth-=rightPanelBar_width-rightPanel_width-PaneVerticalDivider_width;
+                            centerPanel_maxWidth-=(rightPanelBar_width+rightPanel_width+PaneVerticalDivider_width);
                           } else{
                             centerPanel_maxWidth-=rightPanelBar_width;
                           }
-                          print("centerPanel_maxHeight=${centerPanel_maxHeight}");
+                          // print("centerPanel_maxWidth=${centerPanel_maxWidth}");
+                          // print("centerPanel_maxHeight=${centerPanel_maxHeight}");
+
                           return PanelTree(
                             maxWidth: centerPanel_maxWidth,
                             maxHeight: centerPanel_maxHeight,
