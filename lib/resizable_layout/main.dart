@@ -31,9 +31,6 @@ class _HomePageState extends State<HomePage>{
   bool clickLeftPanelBar=false;
 
   double centerPanelBar_height=30;
-  double centerPanel_minWidth=300;
-  double centerPanel_maxWidth=600;
-  double centerPanel_maxHeight=600;
 
   double rightPanel_width=300;
   double rightPanelBar_width=40;
@@ -220,40 +217,12 @@ class _HomePageState extends State<HomePage>{
                 bottom: bottomPanelBar_height,
                 left: clickLeftPanelBar?leftPanelBar_width+leftPanel_width+PaneVerticalDivider_width:leftPanelBar_width,
                 right: clickRightPanelBar?rightPanelBar_width+rightPanel_width+PaneVerticalDivider_width:rightPanelBar_width,
-                child: Stack(
-                  children: [
-                    Positioned(
-                      top:0,
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      child:
-                        Builder(builder: (context){
-                          centerPanel_maxHeight=constraints.maxHeight-bottomPanelBar_height;
-                          centerPanel_maxWidth=constraints.maxWidth;
-                          if(clickLeftPanelBar){
-                            centerPanel_maxWidth-=(leftPanelBar_width+leftPanel_width+PaneVerticalDivider_width);
-                          } else{
-                            centerPanel_maxWidth-=leftPanelBar_width;
-                          }
-
-                          if(clickRightPanelBar){
-                            centerPanel_maxWidth-=(rightPanelBar_width+rightPanel_width+PaneVerticalDivider_width);
-                          } else{
-                            centerPanel_maxWidth-=rightPanelBar_width;
-                          }
-                          // print("centerPanel_maxWidth=${centerPanel_maxWidth}");
-                          // print("centerPanel_maxHeight=${centerPanel_maxHeight}");
-
-                          return PanelTree(
-                            maxWidth: centerPanel_maxWidth,
-                            maxHeight: centerPanel_maxHeight,
-                          );
-                        }),
-                    ),
-                  ],
-                ),
-
+                child: LayoutBuilder(builder: (BuildContext context, BoxConstraints constraints) {
+                  return PanelTree(
+                    maxWidth: constraints.maxWidth,
+                    maxHeight: constraints.maxHeight,
+                  );
+                }),
               ),
 
               clickRightPanelBar ? Positioned(
