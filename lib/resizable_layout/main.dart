@@ -4,18 +4,24 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_demo/resizable_layout/component_view.dart';
 
 import 'package:flutter_demo/resizable_layout/view_engine.dart';
+import 'package:provider/provider.dart';
 
 void main()=> runApp(MyApp());
 
 class MyApp extends StatelessWidget{
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner:false,
-      title: "resizable layout",
-      home: Scaffold(
-        body: HomePage(),
-      ),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context)=>SharedModel(),)
+      ],
+      child: MaterialApp(
+        debugShowCheckedModeBanner:false,
+        title: "resizable layout",
+        home: Scaffold(
+          body: HomePage(),
+        ),
+      )
     );
   }
 }
@@ -175,7 +181,7 @@ class _HomePageState extends State<HomePage>{
                     children: [
 
                       // left panel
-                      Container(color: Colors.red,width: leftPanel_width,),
+                      Container(color: CupertinoColors.lightBackgroundGray, width: leftPanel_width,),
 
                       // resizeLeftRight divider
                       PaneVerticalDivider(
@@ -255,7 +261,7 @@ class _HomePageState extends State<HomePage>{
                       ),
 
                       // right panel
-                      Container(color: Colors.blue, width: rightPanel_width,),
+                      Container(color: CupertinoColors.lightBackgroundGray, width: rightPanel_width,),
                     ],
                   ),
               ) : Positioned(
@@ -391,13 +397,7 @@ class _HomePageState extends State<HomePage>{
                         // minWidth:20,
                       ),
                       Spacer(flex: 24),
-                      Row(
-                        children: [
-                          Icon(Icons.remove,color: Colors.white.withAlpha(190),),
-                          Sliders(),
-                          Icon(Icons.add,color: Colors.white.withAlpha(190),),
-                        ],
-                      ),
+                      ScaleSlider(),
                       Spacer(flex: 1),
                     ],
 

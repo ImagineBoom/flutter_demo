@@ -4,19 +4,27 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
+import 'package:provider/provider.dart';
+
+import 'component_view.dart';
+
 enum SplitDirection{ vertical, horizontal }
 
 class PanelWidget extends StatefulWidget{
   final String signature;
   final bool isVerticalSplit=false;
   final bool isHorizonSplit=false;
+  final bool isSelect=false;
+  final double topMeauHeight=20;
+  final double iconSize=20;
+  final Function(String signature) ?setScale;
   final Function(String signature) splitUp;
   final Function(String signature) splitDown;
   final Function(String signature) splitRight;
   final Function(String signature) splitLeft;
   final Function(String signature) close;
 
-  const PanelWidget({super.key, required this.signature, required this.splitUp, required this.splitDown, required this.splitRight, required this.splitLeft, required this.close});
+  const PanelWidget({super.key, required this.signature, required this.splitUp, required this.splitDown, required this.splitRight, required this.splitLeft, required this.close,this.setScale});
 
   @override
   State<PanelWidget> createState() {
@@ -26,49 +34,109 @@ class PanelWidget extends StatefulWidget{
 }
 
 class PanelWidgetState extends State<PanelWidget> {
+  Offset pos = Offset(0, 0);
+  Offset basePos = Offset(0, 0);
+  double baseScale=1.0;
+  double scale_x=1.0;
 
   @override
   Widget build(BuildContext context) {
+
+    SharedModel sharedModel=context.watch<SharedModel>();
+    if(sharedModel.signature==widget.signature){
+      scale_x=sharedModel.scale_x;
+    }
     return LayoutBuilder(
         builder: (context, constraints) => ConstrainedBox(
-          constraints: BoxConstraints.expand(),
-          child: Column(
-              children: [
-                Row(
-                  children: [
-                    IconButton(
-                      onPressed: (){
-                        widget.close(widget.signature);
-                      },
-                      icon: Icon(Icons.clear),
-                      splashRadius: 15.0,
-                      tooltip: "Close",
+            constraints: BoxConstraints.expand(),
+            child: GestureDetector(
+                onTap: (){
+                  debugPrint("tab Panel ${widget.signature}");
+                  sharedModel.changeSignature(widget.signature);
+                  sharedModel.changeScale(scale_x);
+                  },
+                child: Container(
+                  decoration: BoxDecoration(
+                  border: Border.all(
+                    style: BorderStyle.solid,
+                    width: 0.5,
+                    color: Color((widget.signature.hashCode.toDouble() * 0xFFFFFF).toInt()).withOpacity(0.5))),
+                  child: Column(
+                    children: [
+                      Container(
+                        height: widget.topMeauHeight,
+                        color: Color((widget.signature.hashCode.toDouble() * 0xFFFFFF).toInt()).withOpacity(1.0),
+                        child: Row(
+                          children: [
+                            IconButton(
+                              onPressed: (){
+                                widget.close(widget.signature);
+                                },
+                              padding: EdgeInsets.zero,
+                              icon: Icon(Icons.clear,size: widget.iconSize),
+                              iconSize: widget.iconSize,
+                              splashRadius: 15.0,
+                              tooltip: "Close",
+                            ),
+                            Spacer(flex: 1,),
+                            IconButton(
+                              onPressed: (){
+                                widget.splitRight(widget.signature);
+                                },
+                              icon: Transform.rotate(angle: math.pi/2, child: Icon(Icons.view_agenda_outlined,size: widget.iconSize),),
+                              padding: EdgeInsets.zero,
+                              splashRadius: 15.0,
+                              tooltip: "Split Right",
+                            ),
+                            IconButton(
+                              onPressed: (){
+                                widget.splitDown(widget.signature);
+                                },
+                              icon: Icon(Icons.view_agenda_outlined,size: widget.iconSize),
+                              padding: EdgeInsets.zero,
+                              splashRadius: 15.0,
+                              tooltip: "Split Down",
+                            ),
+                          ],
+                        ),
+                      ),
+                      Expanded(
+                        child: InteractiveViewer(
+                          minScale: 0.1,
+                          maxScale: 10,
+                          transformationController: TransformationController(Matrix4.identity()..scale(scale_x)..translate(pos.dx, pos.dy)),
+                          panEnabled: false,
+                          onInteractionStart: (scaleStartDetails){
+                            if(sharedModel.signature==widget.signature){
+                              baseScale=sharedModel.scale_x;
+                              pos=sharedModel.pos;
+                              basePos = scaleStartDetails.localFocalPoint - pos;
+                            }
+                          },
+                          onInteractionUpdate: (scaleUpdateDetails){
+                            pos =scaleUpdateDetails.localFocalPoint-basePos;
+                            scale_x=baseScale*scaleUpdateDetails.scale;
+                            sharedModel.changeSignature(widget.signature);
+                            if(0<=scale_x && scale_x<=10.0){
+                              sharedModel.changeScale(scale_x);
+                            }
+                            sharedModel.changePos(pos);
+                          },
+                          onInteractionEnd: (scaleEndDetails){
+                          },
+                          child: Container(
+                            width: constraints.maxWidth,
+                            color: Color((widget.signature.hashCode.toDouble() * 0xFFFFFF).toInt()).withOpacity(0.5),
+                            child: Text(widget.signature),
+                          ),
                     ),
-                    Spacer(flex: 1,),
-                    IconButton(
-                      onPressed: (){
-                        widget.splitRight(widget.signature);
-                      },
-                      icon: Transform.rotate(angle: math.pi/2, child: Icon(Icons.view_agenda_outlined,),),
-                      padding: EdgeInsets.zero,
-                      splashRadius: 15.0,
-                      tooltip: "Split Right",
-                    ),
-                    IconButton(
-                      onPressed: (){
-                        widget.splitDown(widget.signature);
-                      },
-                      icon: Transform.rotate(angle: math.pi/2, child: Icon(Icons.width_normal_outlined,)),
-                      padding: EdgeInsets.zero,
-                      splashRadius: 15.0,
-                      tooltip: "Split Down",
-                    ),
-                  ],
-                ),
-                Expanded(child: Container(constraints: BoxConstraints.expand(),color: Color((widget.signature.hashCode.toDouble() * 0xFFFFFF).toInt()).withOpacity(1.0),child: Text(widget.signature),),)
-              ]
+                  ),
+                ],
+              ),
+            )
+
           ),
-        )
+        ),
     );
   }
 
