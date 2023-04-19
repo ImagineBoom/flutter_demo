@@ -73,7 +73,10 @@ class PanelWidgetState extends State<PanelWidget> {
                                 widget.close(widget.signature);
                                 },
                               padding: EdgeInsets.zero,
-                              icon: Icon(Icons.clear,size: widget.iconSize),
+                              icon: Icon(
+                                Icons.clear,size: widget.iconSize,
+                                color: Color((widget.signature.hashCode.toDouble() * 0xFFFFFF).toInt()).withOpacity(1.0).contrast(),
+                              ),
                               iconSize: widget.iconSize,
                               splashRadius: 15.0,
                               tooltip: "Close",
@@ -83,7 +86,14 @@ class PanelWidgetState extends State<PanelWidget> {
                               onPressed: (){
                                 widget.splitRight(widget.signature);
                                 },
-                              icon: Transform.rotate(angle: math.pi/2, child: Icon(Icons.view_agenda_outlined,size: widget.iconSize),),
+                              icon: Transform.rotate(
+                                angle: math.pi/2,
+                                child: Icon(
+                                  Icons.view_agenda_outlined,
+                                  size: widget.iconSize,
+                                  color: Color((widget.signature.hashCode.toDouble() * 0xFFFFFF).toInt()).withOpacity(1.0).contrast(),
+                                ),
+                              ),
                               padding: EdgeInsets.zero,
                               splashRadius: 15.0,
                               tooltip: "Split Right",
@@ -92,7 +102,11 @@ class PanelWidgetState extends State<PanelWidget> {
                               onPressed: (){
                                 widget.splitDown(widget.signature);
                                 },
-                              icon: Icon(Icons.view_agenda_outlined,size: widget.iconSize),
+                              icon: Icon(
+                                Icons.view_agenda_outlined,
+                                size: widget.iconSize,
+                                color: Color((widget.signature.hashCode.toDouble() * 0xFFFFFF).toInt()).withOpacity(1.0).contrast(),
+                              ),
                               padding: EdgeInsets.zero,
                               splashRadius: 15.0,
                               tooltip: "Split Down",
