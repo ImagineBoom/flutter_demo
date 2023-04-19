@@ -7,24 +7,20 @@ import 'dart:math' as math;
 import 'package:provider/provider.dart';
 
 import 'component_view.dart';
-
+import 'common.dart';
 enum SplitDirection{ vertical, horizontal }
 
 class PanelWidget extends StatefulWidget{
   final String signature;
-  final bool isVerticalSplit=false;
-  final bool isHorizonSplit=false;
-  final bool isSelect=false;
   final double topMeauHeight=20;
   final double iconSize=20;
-  final Function(String signature) ?setScale;
   final Function(String signature) splitUp;
   final Function(String signature) splitDown;
   final Function(String signature) splitRight;
   final Function(String signature) splitLeft;
   final Function(String signature) close;
 
-  const PanelWidget({super.key, required this.signature, required this.splitUp, required this.splitDown, required this.splitRight, required this.splitLeft, required this.close,this.setScale});
+  const PanelWidget({super.key, required this.signature, required this.splitUp, required this.splitDown, required this.splitRight, required this.splitLeft, required this.close});
 
   @override
   State<PanelWidget> createState() {
@@ -43,9 +39,16 @@ class PanelWidgetState extends State<PanelWidget> {
   Widget build(BuildContext context) {
 
     SharedModel sharedModel=context.watch<SharedModel>();
+
     if(sharedModel.signature==widget.signature){
       scale_x=sharedModel.scale_x;
+      pos=sharedModel.pos;
+
+      // debugPrint("reset pos=$pos");
+      // debugPrint("reset scale_x=$scale_x");
     }
+    debugPrint("reset sig=${sharedModel.signature}");
+
     return LayoutBuilder(
         builder: (context, constraints) => ConstrainedBox(
             constraints: BoxConstraints.expand(),
@@ -54,6 +57,7 @@ class PanelWidgetState extends State<PanelWidget> {
                   debugPrint("tab Panel ${widget.signature}");
                   sharedModel.changeSignature(widget.signature);
                   sharedModel.changeScale(scale_x);
+                  sharedModel.changePos(pos);
                   },
                 child: Container(
                   decoration: BoxDecoration(
@@ -131,9 +135,15 @@ class PanelWidgetState extends State<PanelWidget> {
                             pos =scaleUpdateDetails.localFocalPoint-basePos;
                             scale_x=baseScale*scaleUpdateDetails.scale;
                             sharedModel.changeSignature(widget.signature);
-                            if(0<=scale_x && scale_x<=10.0){
+
+                            if(scale_x<0){
+                              sharedModel.changeScale(0);
+                            }else if(scale_x>10){
+                              sharedModel.changeScale(10);
+                            } else {
                               sharedModel.changeScale(scale_x);
                             }
+
                             sharedModel.changePos(pos);
                           },
                           onInteractionEnd: (scaleEndDetails){
