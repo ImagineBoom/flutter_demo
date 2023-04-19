@@ -20,35 +20,77 @@ class PaneVerticalDivider extends StatefulWidget{
 
 }
 
-class SharedModel extends ChangeNotifier{
+class SharedMessage {
   String signature ="";
   double scale_x = 1.0;
-  double scale_y = 1.0;
   Offset pos = Offset(0, 0);
+  SharedMessage(this.signature,[double? scale_x, Offset? pos]){
+    this.scale_x = scale_x ?? 1.0;
+    this.pos = pos ?? Offset(0, 0);
+  }
+}
+
+class SharedModel extends ChangeNotifier{
+  // current select
+  String signature="";
+
+  // signature, value
+  Map<String, SharedMessage> sharedMessage={};
 
   SharedModel();
 
-  SharedModel.withCopy([String? signature, double? scale_x, double? scale_y]){
-    this.signature=signature?? this.signature;
-    this.scale_x=scale_x??this.scale_x;
-    this.scale_y=scale_y??this.scale_y;
+  double get scale_x => this.sharedMessage[signature]?.scale_x ?? 1.0;
+
+  Offset get pos => this.sharedMessage[signature]?.pos ?? Offset(0, 0);
+
+  void resetScalePos(String signature){
+    this.sharedMessage[signature]?.signature=signature;
+    this.sharedMessage[signature]?.scale_x=1.0;
+    this.sharedMessage[signature]?.pos=Offset(0, 0);
+    notifyListeners();
+    print("change $signature");
+  }
+
+  void resetMultiScalePos(List<String> signatures){
+    for(String signature in signatures){
+      this.sharedMessage[signature]?.signature=signature;
+      this.sharedMessage[signature]?.scale_x=1.0;
+      this.sharedMessage[signature]?.pos=Offset(0, 0);
+      print("change $signature");
+    }
+    notifyListeners();
+  }
+
+  void changeScaleWithSignature(String signature, double scale_x, [double? scale_y]){
+    this.signature=signature;
+    this.sharedMessage.putIfAbsent(signature, () => SharedMessage(signature)).scale_x=scale_x;
     notifyListeners();
   }
 
   void changeScale(double scale_x, [double? scale_y]){
-    this.scale_x=scale_x;
-    this.scale_y=scale_y??this.scale_y;
+    this.sharedMessage.putIfAbsent(signature, () => SharedMessage(signature)).scale_x=scale_x;
+    notifyListeners();
+  }
+
+  void changePosWithSignature(String signature, Offset pos){
+    this.signature=signature;
+    this.sharedMessage.putIfAbsent(signature, () => SharedMessage(signature)).pos=pos;
     notifyListeners();
   }
 
   void changePos(Offset pos){
-    this.pos=pos;
+    this.sharedMessage.putIfAbsent(signature, () => SharedMessage(signature)).pos=pos;
     notifyListeners();
   }
 
-  void changeSignature(String signature){
-    this.signature=signature;
+  void removeSignature(String signature){
+    this.sharedMessage.remove(signature);
+    this.signature="";
     notifyListeners();
+  }
+
+  void changeSignature(String signature) {
+    this.signature = signature;
   }
 
 }
@@ -129,13 +171,14 @@ class ScaleSlider extends StatefulWidget {
   const ScaleSlider({super.key});
   final double max=10.0;
   final int divisions =40;
-  final double buttonWidth=30;
+  final double buttonWidth=20;
   @override
   State<ScaleSlider> createState() => _SlidersState();
 }
 
 class _SlidersState extends State<ScaleSlider> {
   Timer? timer;
+
 
   @override
   Widget build(BuildContext context) {
@@ -189,23 +232,36 @@ class _SlidersState extends State<ScaleSlider> {
               },
               // hoverColor:  Colors.white,
               minWidth: widget.buttonWidth,
-              child: Icon(Icons.remove, color: Colors.white.withAlpha(190),),
+              child: Icon(
+                Icons.remove,
+                color: Colors.white.withAlpha(190),
+                size: widget.buttonWidth,
+              ),
             )
           ),
-
-        Slider(
-          max: widget.max,
-          divisions: widget.divisions,
-          value: sharedModel.scale_x,
-          label: sharedModel.scale_x.toStringAsFixed(2).toString(),
-          onChanged: (value) {
-            setState(() {
-              sharedModel.changeSignature(sharedModel.signature);
-              sharedModel.changeScale(value);
-            });
-          },
+        SliderTheme(
+          data: SliderThemeData(
+            thumbColor: CupertinoColors.systemBlue, // 拖动控件的颜色
+            overlayColor: Colors.transparent, // 光晕颜色
+            activeTrackColor: CupertinoColors.activeOrange, // 已激活部分的颜色
+            inactiveTrackColor: CupertinoColors.systemTeal.withOpacity(0.4), // 未激活部分的颜色
+          ),
+          child: Slider(
+            autofocus: true,
+            secondaryTrackValue:1,
+            // inactiveColor: Colors.transparent,
+            max: widget.max,
+            divisions: widget.divisions,
+            value: sharedModel.scale_x,
+            // label: (sharedModel.scale_x*100).toString()+"%",
+            onChanged: (value) {
+              setState(() {
+                sharedModel.changeSignature(sharedModel.signature);
+                sharedModel.changeScale(value);
+              });
+            },
+          ),
         ),
-
         GestureDetector(
             onLongPressStart: (longPressStartDetails){
               timer = Timer.periodic(const Duration(milliseconds: 250), (t) {
@@ -256,9 +312,17 @@ class _SlidersState extends State<ScaleSlider> {
               child: Icon(
                 Icons.add,
                 color: Colors.white.withAlpha(190),
+                size: widget.buttonWidth,
               ),
             )
         ),
+        SizedBox(width: 10,),
+        SizedBox(width: 50,
+          child: Text((sharedModel.scale_x*100).toStringAsFixed(0).toString()+"%",
+            style: TextStyle(color: CupertinoColors.activeOrange.darkHighContrastElevatedColor),
+          ),
+        )
+
       ],
     );
   }

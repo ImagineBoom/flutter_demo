@@ -39,26 +39,24 @@ class PanelWidgetState extends State<PanelWidget> {
   Widget build(BuildContext context) {
 
     SharedModel sharedModel=context.watch<SharedModel>();
-
-    if(sharedModel.signature==widget.signature){
-      scale_x=sharedModel.scale_x;
-      pos=sharedModel.pos;
-
-      // debugPrint("reset pos=$pos");
-      // debugPrint("reset scale_x=$scale_x");
-    }
-    debugPrint("reset sig=${sharedModel.signature}");
+    sharedModel.sharedMessage.forEach((signature, sharedMessage) {
+      if(signature==widget.signature){
+        scale_x=sharedMessage.scale_x;
+        pos=sharedMessage.pos;
+      }
+    });
+    // debugPrint("reset sig=${sharedModel.signature}");
 
     return LayoutBuilder(
         builder: (context, constraints) => ConstrainedBox(
             constraints: BoxConstraints.expand(),
-            child: GestureDetector(
-                onTap: (){
-                  debugPrint("tab Panel ${widget.signature}");
+            child: Listener(
+                onPointerDown: (tapDownDetails){
+                  debugPrint("tab down Panel ${widget.signature}");
                   sharedModel.changeSignature(widget.signature);
                   sharedModel.changeScale(scale_x);
                   sharedModel.changePos(pos);
-                  },
+                },
                 child: Container(
                   decoration: BoxDecoration(
                   border: Border.all(
@@ -134,17 +132,20 @@ class PanelWidgetState extends State<PanelWidget> {
                           onInteractionUpdate: (scaleUpdateDetails){
                             pos =scaleUpdateDetails.localFocalPoint-basePos;
                             scale_x=baseScale*scaleUpdateDetails.scale;
-                            sharedModel.changeSignature(widget.signature);
 
-                            if(scale_x<0){
-                              sharedModel.changeScale(0);
-                            }else if(scale_x>10){
-                              sharedModel.changeScale(10);
-                            } else {
-                              sharedModel.changeScale(scale_x);
+                            if(sharedModel.signature==widget.signature){
+                              sharedModel.changeSignature(widget.signature);
+
+                              if (scale_x<0) {
+                                sharedModel.changeScale(0);
+                              } else if(scale_x>10) {
+                                sharedModel.changeScale(10);
+                              } else {
+                                sharedModel.changeScale(scale_x);
+                              }
+
+                              sharedModel.changePos(pos);
                             }
-
-                            sharedModel.changePos(pos);
                           },
                           onInteractionEnd: (scaleEndDetails){
                           },
@@ -155,6 +156,7 @@ class PanelWidgetState extends State<PanelWidget> {
                           ),
                     ),
                   ),
+                      MouseRegion()
                 ],
               ),
             )
@@ -679,7 +681,7 @@ class PanelTreeState extends State<PanelTree>{
   @override
   void didUpdateWidget(covariant PanelTree oldWidget) {
     super.didUpdateWidget(oldWidget);
-    print("${widget.maxWidth},${widget.maxHeight}");
+    // print("${widget.maxWidth},${widget.maxHeight}");
     root.pos= PoS(
       top: 0.0,
       bottom: 0.0,
@@ -693,7 +695,7 @@ class PanelTreeState extends State<PanelTree>{
 
   @override
   Widget build(BuildContext context) {
-    print("panelHashTable.keys.len=${panelHashTable.keys.length}");
+    // print("panelHashTable.keys.len=${panelHashTable.keys.length}");
 
     return Stack(
       children: panelHashTable.keys.toList().map((k) {

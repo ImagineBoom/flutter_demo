@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'dart:isolate';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -68,6 +71,7 @@ class _HomePageState extends State<HomePage>{
   @override
   Widget build(BuildContext context) {
     final ColorScheme colors = Theme.of(context).colorScheme;
+    SharedModel shareModel = context.watch<SharedModel>();
 
     return LayoutBuilder(
         builder: (context, constraints) => ConstrainedBox(
@@ -388,7 +392,18 @@ class _HomePageState extends State<HomePage>{
                         ),
                       ),
                       MaterialButton(
-                        onPressed: ()=>{},
+                        onPressed: (){
+                            // for (var signature in panelHashTable.keys) {
+                            //   print("element=$signature");
+                            //   shareModel.resetScalePos(signature);
+                            // }
+                          shareModel.resetMultiScalePos(panelHashTable.keys.toList());
+
+                          // shareModel.resetScalePos("2023-04-19 15:25:51.7386083426602000600481220");
+                          //
+                          // shareModel.resetScalePos("2023-04-19 15:25:49.708046-6655102975498310845");
+
+                        },
                         child: Icon(
                           Icons.refresh,
                           color: CupertinoColors.extraLightBackgroundGray.withAlpha(220),
@@ -412,7 +427,3 @@ class _HomePageState extends State<HomePage>{
 
   }
 }
-
-
-
-
