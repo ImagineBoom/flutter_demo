@@ -156,7 +156,7 @@ class PanelWidgetState extends State<PanelWidget> {
                           ),
                     ),
                   ),
-                      MouseRegion()
+                      // MouseRegion()
                 ],
               ),
             )
