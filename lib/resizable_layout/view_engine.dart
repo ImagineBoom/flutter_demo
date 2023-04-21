@@ -37,25 +37,39 @@ class PanelWidgetState extends State<PanelWidget> {
 
   @override
   Widget build(BuildContext context) {
+    // debugPrint("============start ${widget.signature}  $basePos $pos $baseScale $scale_x ===============");
 
     SharedModel sharedModel=context.watch<SharedModel>();
-    sharedModel.sharedMessage.forEach((signature, sharedMessage) {
-      if(signature==widget.signature){
+
+    if(sharedModel.sharedMessage.containsKey(widget.signature)){
+      SharedMessage? sharedMessage= sharedModel.sharedMessage[widget.signature];
+
+      if(sharedMessage!=null){
         scale_x=sharedMessage.scale_x;
         pos=sharedMessage.pos;
+        // debugPrint("match sharedModel: sign ${widget.signature} ${sharedMessage.pos} ${sharedMessage.scale_x}");
       }
-    });
-    // debugPrint("reset sig=${sharedModel.signature}");
+
+    }else{
+      sharedModel.saveSignature(widget.signature);
+      sharedModel.saveScale(scale_x);
+      sharedModel.savePos(pos);
+    }
+
+    // debugPrint("============end ${widget.signature}  $basePos $pos $baseScale $scale_x ===============");
 
     return LayoutBuilder(
         builder: (context, constraints) => ConstrainedBox(
             constraints: BoxConstraints.expand(),
             child: Listener(
                 onPointerDown: (tapDownDetails){
-                  debugPrint("tab down Panel ${widget.signature}");
+                  debugPrint("onPointerDown Panel ${widget.signature} $pos $scale_x");
                   sharedModel.changeSignature(widget.signature);
                   sharedModel.changeScale(scale_x);
                   sharedModel.changePos(pos);
+                  print("after onPointerDown ${widget.signature} ${sharedModel.sharedMessage["0"]?.pos} ${sharedModel.sharedMessage["0"]?.scale_x}");
+                  print("after onPointerDown ${widget.signature} ${sharedModel.sharedMessage["1"]?.pos} ${sharedModel.sharedMessage["1"]?.scale_x}");
+
                 },
                 child: Container(
                   decoration: BoxDecoration(
@@ -73,7 +87,11 @@ class PanelWidgetState extends State<PanelWidget> {
                             IconButton(
                               onPressed: (){
                                 widget.close(widget.signature);
-                                },
+                                sharedModel.removeSignature(widget.signature);
+                                print("after close ${widget.signature} ${sharedModel.sharedMessage["0"]?.pos} ${sharedModel.sharedMessage["0"]?.scale_x}");
+                                print("after close ${widget.signature} ${sharedModel.sharedMessage["1"]?.pos} ${sharedModel.sharedMessage["1"]?.scale_x}");
+
+                              },
                               padding: EdgeInsets.zero,
                               icon: Icon(
                                 Icons.clear,size: widget.iconSize,
@@ -124,17 +142,21 @@ class PanelWidgetState extends State<PanelWidget> {
                           panEnabled: false,
                           onInteractionStart: (scaleStartDetails){
                             if(sharedModel.signature==widget.signature){
+                              debugPrint("onInteractionStart Panel ${widget.signature}");
+
+                              sharedModel.changeSignature(widget.signature);
                               baseScale=sharedModel.scale_x;
-                              pos=sharedModel.pos;
-                              basePos = scaleStartDetails.localFocalPoint - pos;
+                              pos=sharedModel.pos.copyWith();
+                              basePos = (scaleStartDetails.localFocalPoint - pos).copyWith();
                             }
                           },
                           onInteractionUpdate: (scaleUpdateDetails){
-                            pos =scaleUpdateDetails.localFocalPoint-basePos;
-                            scale_x=baseScale*scaleUpdateDetails.scale;
+                            debugPrint("onInteractionUpdate Panel ${widget.signature}");
 
                             if(sharedModel.signature==widget.signature){
                               sharedModel.changeSignature(widget.signature);
+                              pos =(scaleUpdateDetails.localFocalPoint-basePos).copyWith();
+                              scale_x=baseScale*scaleUpdateDetails.scale;
 
                               if (scale_x<0) {
                                 sharedModel.changeScale(0);
@@ -147,12 +169,11 @@ class PanelWidgetState extends State<PanelWidget> {
                               sharedModel.changePos(pos);
                             }
                           },
-                          onInteractionEnd: (scaleEndDetails){
-                          },
+                          onInteractionEnd: (scaleEndDetails){},
                           child: Container(
                             width: constraints.maxWidth,
                             color: Color((widget.signature.hashCode.toDouble() * 0xFFFFFF).toInt()).withOpacity(0.5),
-                            child: Text(widget.signature),
+                            child: Text("${widget.signature}+${pos}+${scale_x.toString()}"),
                           ),
                     ),
                   ),
@@ -232,6 +253,34 @@ class PanelNode{
 
   PanelNode(this.signature, this.pos, {this.state, this.child1, this.child2, this.parent});
 
+  void _print(StringBuffer buffer, String prefix, bool isTail) {
+    buffer.write(prefix);
+    buffer.write(isTail ? '└── ' : '├── ');
+    if(state==SplitDirection.vertical){
+      buffer.write('V $signature\n');
+    }
+    else if(state==SplitDirection.horizontal){
+      buffer.write('H $signature\n');
+    }else{
+      buffer.write('($signature)\n');
+    }
+
+    if (child1 != null) {
+      child1?._print(buffer, '$prefix${isTail ? '    ' : '│   '}', false);
+    }
+
+    if (child2 != null) {
+      child2?._print(buffer, '$prefix${isTail ? '    ' : '│   '}', true);
+    }
+  }
+
+  @override
+  String toString() {
+    final buffer = StringBuffer();
+    _print(buffer, '', true);
+    return buffer.toString();
+  }
+
 }
 
 class PanelTree extends StatefulWidget{
@@ -254,10 +303,18 @@ class PanelTree extends StatefulWidget{
     return "${DateTime.fromMicrosecondsSinceEpoch(DateTime.now().microsecondsSinceEpoch).toLocal()}${randomInt64}";
   }
 
+
 }
 
 class PanelTreeState extends State<PanelTree>{
+  int counter=-1;
   late PanelNode root;
+
+  String sign(){
+    counter++;
+    return counter.toString();
+  }
+
 
   // from Node(signature), add new Node and it self as children
   void insertNode(String signature){
@@ -322,87 +379,93 @@ class PanelTreeState extends State<PanelTree>{
   }
 
   // according it's signature
-  // 1. remove the node and it's brother node
+  // 1. parent remove the node and it's brother node
   // 2. replace all nodes signature with the provided node's brother node's signature
   void removeNodeInTree(PanelNode? node){
-    if(node!=null){
-      // find brother and parent nodes
-      PanelNode? brotherNode = findNodeBrother(node.signature);
-      PanelNode? parentNode = brotherNode?.parent;
+    if(node==null){return;}
 
-      // if node and brother are leaves
-      if(brotherNode?.child1==null ||brotherNode?.child2==null){
-        // 1. remove the two brothers
-        parentNode?.child1=null;
-        parentNode?.child2=null;
-        // update parent children
-        // parentNode?.child1=brotherNode?.child1;
-        // brotherNode?.child1?.parent=parentNode;
-        // parentNode?.child2=brotherNode?.child2;
-        // brotherNode?.child2?.parent=parentNode;
+    // find brother and parent nodes
+    PanelNode? brotherNode = findNodeBrother(node.signature);
+    PanelNode? parentNode = brotherNode?.parent;
 
-        // print("parentNode?.child1=${parentNode?.child1}");
-        // print("parentNode?.child2=${parentNode?.child2}");
-        // print("node=${node}");
-        // print("brother=${brotherNode}");
+    if(brotherNode==null){return;}
 
-        // 2. 回溯 parents node
-        for(PanelNode? pn=node.parent; pn?.signature==node.signature; pn=pn?.parent){
-          if(brotherNode!=null){
-            pn?.signature=brotherNode.signature;
-          }
-          print("pn.signature=${pn?.signature}");
-        }
+    // if node and brother are leaves
+    if(brotherNode.child1==null || brotherNode.child2==null){
+      // 1. parent cut off connect to the two brothers
+      parentNode?.child1=null;
+      parentNode?.child2=null;
+      // update parent children
+      // parentNode?.child1=brotherNode?.child1;
+      // brotherNode?.child1?.parent=parentNode;
+      // parentNode?.child2=brotherNode?.child2;
+      // brotherNode?.child2?.parent=parentNode;
 
-        //  cut off
-        node.parent=null;
-        brotherNode?.parent=null;
-      }else{
-      // if brother is child tree
+      // print("parentNode?.child1=${parentNode?.child1}");
+      // print("parentNode?.child2=${parentNode?.child2}");
+      // print("node=${node}");
+      // print("brother=${brotherNode}");
 
-        // 1. remove the two brothers
-        parentNode?.child1=null;
-        parentNode?.child2=null;
-
-        // 2. 回溯 parents node
-        for(PanelNode? pn=node.parent; pn?.signature==node.signature; pn=pn?.parent){
-          if(brotherNode!=null){
-            pn?.signature=brotherNode.signature;
-          }
-          print("pn.signature=${pn?.signature}");
-        }
-
-        brotherNode?.pos=parentNode!.pos.copyWith();
-        // set new relation
-        if(parentNode?.parent!=null){
-          brotherNode?.parent=parentNode?.parent;
-          if(parentNode?.parent?.child1?.signature==parentNode?.signature){
-            parentNode?.parent?.child1=brotherNode;
-          }else if(parentNode?.parent?.child2?.signature==parentNode?.signature){
-            parentNode?.parent?.child2=brotherNode;
-          }
-        }else{
-          root=brotherNode!;
-          brotherNode.parent=null;
-        }
-
-        //  cut off old relation
-        node.parent=null;
-
-
-        // splitFromTree
-        splitFromTree(brotherNode!);
+      // 2. 回溯 parents node
+      // backtrack parents node,
+      // update tree, replace this signature with brother's signature
+      for(PanelNode? pn=node.parent; pn?.signature==node.signature; pn=pn?.parent){
+        pn?.signature=brotherNode.signature;
+        print("pn.signature=${pn?.signature}");
       }
 
+      // 3. cut off connect to parent node, destroy the node
+      node.parent=null;
+      brotherNode.parent=null;
+      node=null;
+      brotherNode=null;
+    }
+    else{
+      // if brother is child tree
+
+      // 1. backtrack parents node,
+      // update tree, replace this signature with brother's signature
+      for(PanelNode? pn=node.parent; pn?.signature==node.signature; pn=pn?.parent){
+        pn?.signature=brotherNode.signature;
+        print("pn.signature=${pn?.signature}");
+      }
+
+      // 2. replace brother's pos with parent's pos
+      brotherNode.pos=parentNode!.pos.copyWith();
+
+      PanelNode? grandPa=parentNode.parent;
+
+      // 3. set new relation
+      // connect brother to grandPa
+      brotherNode.parent=grandPa;
+
+      if(grandPa!=null){
+        if(grandPa.child1?.signature==parentNode.signature){
+          grandPa.child1=brotherNode;
+        }else if(grandPa.child2?.signature==parentNode.signature){
+          grandPa.child2=brotherNode;
+        }
+      }
+      else{
+        root=brotherNode;
+        brotherNode.parent=null;
+      }
+
+      // 4. destroy node and parent
+      node=null;
+      parentNode=null;
+
+      // 5. resizeFromTreeRoot
+      resizeFromTreeRoot(brotherNode);
     }
   }
 
   // according it's signature
   // the child root node need defined PoS
-  void splitFromTree(PanelNode child){
+  void resizeFromTreeRoot(PanelNode child){
 
     Queue<PanelNode> stack=Queue();
-
+ 
     // init the stack
     stack.addLast(child);
 
@@ -415,7 +478,7 @@ class PanelTreeState extends State<PanelTree>{
         continue;
       }
 
-      if(curNode.child1!=null && curNode.child2!=null){
+      if(curNode.child1 != null && curNode.child2 != null){
 
         if(curNode.state==SplitDirection.vertical){
           // child1
@@ -423,35 +486,27 @@ class PanelTreeState extends State<PanelTree>{
             right: curNode.pos.right!+curNode.pos.width!/2,
             width: curNode.pos.width!/2
           );
-
-          panelHashTable[curNode.child1?.signature]?.pos = curNode.child1!.pos.copyWith();
-
           // child2
           curNode.child2?.pos=curNode.pos.copyWith(
               left: curNode.pos.left+curNode.pos.width!/2,
               width: curNode.pos.width!/2
           );
 
-          panelHashTable[curNode.child2?.signature]?.pos=curNode.child2!.pos.copyWith();
-
-
-        }else if(curNode.state==SplitDirection.horizontal){
+        }
+        else if(curNode.state==SplitDirection.horizontal){
           // child1
           curNode.child1?.pos=curNode.pos.copyWith(
               bottom: curNode.pos.bottom!+curNode.pos.height!/2,
               height: curNode.pos.height!/2
           );
-          panelHashTable[curNode.child1?.signature]?.pos=curNode.child1!.pos.copyWith();
-
           // child2
           curNode.child2?.pos=curNode.pos.copyWith(
               top: curNode.pos.top+curNode.pos.height!/2,
               height: curNode.pos.height!/2
           );
-          panelHashTable[curNode.child2?.signature]?.pos=curNode.child2!.pos.copyWith();
-
         }
 
+        // add curNode children
         stack.addLast(curNode.child1!);
         stack.addLast(curNode.child2!);
 
@@ -470,7 +525,7 @@ class PanelTreeState extends State<PanelTree>{
   void splitDown(String signature){
     print("splitDown ${signature}");
     // 1. sign
-    String newSignature=widget.sign();
+    String newSignature=sign();
     print("newSignature=$newSignature");
 
     // calculate PoS1 and PoS2
@@ -529,6 +584,7 @@ class PanelTreeState extends State<PanelTree>{
       print("node.child2 PoS=${node?.child2?.pos}");
 
     });
+    debugPrint(root.toString());
   }
 
   // child1: old node, child2: new node
@@ -541,7 +597,7 @@ class PanelTreeState extends State<PanelTree>{
   void splitRight(String signature){
     print("splitRight ${signature}");
     // 1. sign
-    String newSignature=widget.sign();
+    String newSignature=sign();
     print("newSignature=$newSignature");
 
     // calculate PoS1 and PoS2
@@ -567,7 +623,7 @@ class PanelTreeState extends State<PanelTree>{
       // 2. fill hash table
 
       // add new element
-      panelHashTable[newSignature]=PanelHashTableElement(
+      panelHashTable[newSignature] =  PanelHashTableElement(
         pos: pos2.copyWith(),
         content: PanelWidget(
           signature: newSignature,
@@ -600,49 +656,62 @@ class PanelTreeState extends State<PanelTree>{
       print("node.child2 PoS=${node?.child2?.pos}");
 
     });
-    print("");
+    debugPrint(root.toString());
 
   }
 
   void close(String signature){
+    debugPrint(root.toString());
     print("close ${signature}");
 
     // 1. find brother and parent nodes
-    PanelNode? node=findLeafNode(signature, root);
+    PanelNode? leafNode=findLeafNode(signature, root);
     PanelNode? brotherNode = findNodeBrother(signature);
     PanelNode? parentNode = brotherNode?.parent;
 
-    print("node?.signature=${node?.signature}");
+    print("node?.signature=${leafNode?.signature}");
     print("brotherNode?.signature=${brotherNode?.signature}");
     print("parentNode?.signature=${parentNode?.signature}");
-    print("node PoS       =${node?.pos}");
+    print("node PoS       =${leafNode?.pos}");
     print("brotherNode PoS=${brotherNode?.pos}");
     print("parentNode PoS =${parentNode?.pos}");
 
     setState(() {
       if(brotherNode == null){
+        print("leafNode?.signature=${leafNode?.signature}");
         print("is root node");
         // is root node
 
-      }else{
-        // not root node
+      }
+      else{
+        String brotherNodeSignature=brotherNode!.signature;
 
+        // not root node
         // 2. update node tree
         // remove the node
-        removeNodeInTree(node);
+        removeNodeInTree(leafNode);
 
         // 3. update hashtable from node tree
 
-        if(panelHashTable.containsKey(signature)){
-          panelHashTable[brotherNode.signature]?.state = parentNode?.state;
-          panelHashTable[brotherNode.signature]?.pos = parentNode!.pos.copyWith();
-          panelHashTable.remove(signature);
-        }
+        // 3.1 remove this from hashtable
+        panelHashTable.remove(signature);
 
+        // 3.2 get new leaf accord brotherSignature
+        brotherNode=findLeafNode(brotherNodeSignature, root);
+        if(brotherNode!=null){
+
+        }
+        print("brotherNodeSignature=$brotherNodeSignature");
+        print("new brotherNode?.signature=${brotherNode?.signature}");
+        print("new brotherNode PoS=${brotherNode?.pos}");
+        // 3.3 update brother state from tree
+        panelHashTable[brotherNodeSignature]?.state = brotherNode?.state;
+        // 3.4 update brother pos free tree
+        panelHashTable[brotherNodeSignature]?.pos = brotherNode!.pos.copyWith();
         // update hash table element's position and size
         // PanelNode? beginNode=findBeginNode(signature, node);
         // if(beginNode!=null){
-        //   splitFromTree(beginNode);
+        //   resizeFromTreeRoot(beginNode);
         // }
 
       }
@@ -654,7 +723,7 @@ class PanelTreeState extends State<PanelTree>{
   @override
   void initState() {
     super.initState();
-    String signature=widget.sign();
+    String signature=sign();
     print("signature=$signature");
     PoS pos=PoS(
       top: 0.0,
@@ -690,7 +759,7 @@ class PanelTreeState extends State<PanelTree>{
       width: widget.maxWidth,
       height: widget.maxHeight,
     );
-    splitFromTree(root);
+    resizeFromTreeRoot(root);
   }
 
   @override

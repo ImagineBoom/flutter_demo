@@ -1,8 +1,7 @@
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'dart:math' as math;
-
+import 'package:flutter_demo/resizable_layout/common.dart';
 import 'package:provider/provider.dart';
 
 // resize LeftRight divider
@@ -26,7 +25,7 @@ class SharedMessage {
   Offset pos = Offset(0, 0);
   SharedMessage(this.signature,[double? scale_x, Offset? pos]){
     this.scale_x = scale_x ?? 1.0;
-    this.pos = pos ?? Offset(0, 0);
+    this.pos = pos?.copyWith() ?? Offset(0, 0);
   }
 }
 
@@ -41,21 +40,17 @@ class SharedModel extends ChangeNotifier{
 
   double get scale_x => this.sharedMessage[signature]?.scale_x ?? 1.0;
 
-  Offset get pos => this.sharedMessage[signature]?.pos ?? Offset(0, 0);
+  Offset get pos => this.sharedMessage[signature]?.pos.copyWith() ?? Offset(0, 0);
 
   void resetScalePos(String signature){
-    this.sharedMessage[signature]?.signature=signature;
-    this.sharedMessage[signature]?.scale_x=1.0;
-    this.sharedMessage[signature]?.pos=Offset(0, 0);
+    this.sharedMessage[signature]=SharedMessage(signature,1.0,Offset(0, 0));
     notifyListeners();
     print("change $signature");
   }
 
   void resetMultiScalePos(List<String> signatures){
     for(String signature in signatures){
-      this.sharedMessage[signature]?.signature=signature;
-      this.sharedMessage[signature]?.scale_x=1.0;
-      this.sharedMessage[signature]?.pos=Offset(0, 0);
+      this.sharedMessage[signature]=SharedMessage(signature,1.0,Offset(0, 0));
       print("change $signature");
     }
     notifyListeners();
@@ -72,15 +67,23 @@ class SharedModel extends ChangeNotifier{
     notifyListeners();
   }
 
+  void saveScale(double scale_x, [double? scale_y]){
+    this.sharedMessage.putIfAbsent(signature, () => SharedMessage(signature)).scale_x=scale_x;
+  }
+
   void changePosWithSignature(String signature, Offset pos){
     this.signature=signature;
-    this.sharedMessage.putIfAbsent(signature, () => SharedMessage(signature)).pos=pos;
+    this.sharedMessage.putIfAbsent(signature, () => SharedMessage(signature)).pos=pos.copyWith();
     notifyListeners();
   }
 
   void changePos(Offset pos){
-    this.sharedMessage.putIfAbsent(signature, () => SharedMessage(signature)).pos=pos;
+    this.sharedMessage.putIfAbsent(signature, () => SharedMessage(signature)).pos=pos.copyWith();
     notifyListeners();
+  }
+
+  void savePos(Offset pos){
+    this.sharedMessage.putIfAbsent(signature, () => SharedMessage(signature)).pos=pos.copyWith();
   }
 
   void removeSignature(String signature){
@@ -91,7 +94,14 @@ class SharedModel extends ChangeNotifier{
 
   void changeSignature(String signature) {
     this.signature = signature;
+    notifyListeners();
   }
+
+  void saveSignature(String signature) {
+    this.signature = signature;
+  }
+
+
 
 }
 

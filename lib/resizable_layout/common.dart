@@ -21,3 +21,12 @@ extension InvertColorRGB on Color {
     return Color.fromARGB((this.opacity * 255).round(), r, g, b);
   }
 }
+
+extension CopyOffset on Offset{
+  Offset copyWith([double? dx, double? dy]){
+    return Offset(
+        dx??this.dx,
+        dy??this.dy
+    );
+  }
+}
