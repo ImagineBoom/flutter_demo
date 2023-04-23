@@ -12,7 +12,7 @@ enum SplitDirection{ vertical, horizontal }
 
 class PanelWidget extends StatefulWidget{
   final String signature;
-  final double topMeauHeight=20;
+  final double topMenuHeight=20;
   final double iconSize=20;
   final Function(String signature) splitUp;
   final Function(String signature) splitDown;
@@ -82,7 +82,7 @@ class PanelWidgetState extends State<PanelWidget> {
                   child: Column(
                     children: [
                       Container(
-                        height: widget.topMeauHeight,
+                        height: widget.topMenuHeight,
                         color: Color((widget.signature.hashCode.toDouble() * 0xFFFFFF).toInt()).withOpacity(1.0),
                         child: Row(
                           children: [
