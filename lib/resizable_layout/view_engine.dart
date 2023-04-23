@@ -45,15 +45,20 @@ class PanelWidgetState extends State<PanelWidget> {
       SharedMessage? sharedMessage= sharedModel.sharedMessage[widget.signature];
 
       if(sharedMessage!=null){
-        scale_x=sharedMessage.scale_x;
-        pos=sharedMessage.pos;
-        // debugPrint("match sharedModel: sign ${widget.signature} ${sharedMessage.pos} ${sharedMessage.scale_x}");
+        this.pos=sharedMessage.pos;
+        this.scale_x=sharedMessage.scale_x;
+        debugPrint("match sharedModel: sign ${widget.signature} ${sharedMessage.pos} ${sharedMessage.scale_x}");
       }
 
     }else{
-      sharedModel.saveSignature(widget.signature);
-      sharedModel.saveScale(scale_x);
-      sharedModel.savePos(pos);
+      // sharedModel.saveSignature(widget.signature);
+      // sharedModel.saveScale(scale_x);
+      // sharedModel.savePos(pos);
+
+      this.pos = Offset(0, 0);
+      // this.basePos = Offset(0, 0);
+      // this.baseScale=1.0;
+      this.scale_x=1.0;
     }
 
     // debugPrint("============end ${widget.signature}  $basePos $pos $baseScale $scale_x ===============");
@@ -64,12 +69,9 @@ class PanelWidgetState extends State<PanelWidget> {
             child: Listener(
                 onPointerDown: (tapDownDetails){
                   debugPrint("onPointerDown Panel ${widget.signature} $pos $scale_x");
-                  sharedModel.changeSignature(widget.signature);
-                  sharedModel.changeScale(scale_x);
-                  sharedModel.changePos(pos);
-                  print("after onPointerDown ${widget.signature} ${sharedModel.sharedMessage["0"]?.pos} ${sharedModel.sharedMessage["0"]?.scale_x}");
-                  print("after onPointerDown ${widget.signature} ${sharedModel.sharedMessage["1"]?.pos} ${sharedModel.sharedMessage["1"]?.scale_x}");
-
+                  sharedModel.saveSignature(widget.signature);
+                  sharedModel.saveScale(this.scale_x);
+                  sharedModel.savePos(this.pos);
                 },
                 child: Container(
                   decoration: BoxDecoration(
@@ -88,8 +90,6 @@ class PanelWidgetState extends State<PanelWidget> {
                               onPressed: (){
                                 widget.close(widget.signature);
                                 sharedModel.removeSignature(widget.signature);
-                                print("after close ${widget.signature} ${sharedModel.sharedMessage["0"]?.pos} ${sharedModel.sharedMessage["0"]?.scale_x}");
-                                print("after close ${widget.signature} ${sharedModel.sharedMessage["1"]?.pos} ${sharedModel.sharedMessage["1"]?.scale_x}");
 
                               },
                               padding: EdgeInsets.zero,
@@ -138,16 +138,16 @@ class PanelWidgetState extends State<PanelWidget> {
                         child: InteractiveViewer(
                           minScale: 0.1,
                           maxScale: 10,
-                          transformationController: TransformationController(Matrix4.identity()..scale(scale_x)..translate(pos.dx, pos.dy)),
+                          transformationController: TransformationController(Matrix4.identity()..scale(this.scale_x)..translate(this.pos.dx, this.pos.dy)),
                           panEnabled: false,
                           onInteractionStart: (scaleStartDetails){
                             if(sharedModel.signature==widget.signature){
                               debugPrint("onInteractionStart Panel ${widget.signature}");
 
                               sharedModel.changeSignature(widget.signature);
-                              baseScale=sharedModel.scale_x;
-                              pos=sharedModel.pos.copyWith();
-                              basePos = (scaleStartDetails.localFocalPoint - pos).copyWith();
+                              this.baseScale=sharedModel.scale_x;
+                              this.pos=sharedModel.pos.copyWith();
+                              this.basePos = (scaleStartDetails.localFocalPoint - this.pos).copyWith();
                             }
                           },
                           onInteractionUpdate: (scaleUpdateDetails){
@@ -155,25 +155,25 @@ class PanelWidgetState extends State<PanelWidget> {
 
                             if(sharedModel.signature==widget.signature){
                               sharedModel.changeSignature(widget.signature);
-                              pos =(scaleUpdateDetails.localFocalPoint-basePos).copyWith();
-                              scale_x=baseScale*scaleUpdateDetails.scale;
+                              this.pos =(scaleUpdateDetails.localFocalPoint-this.basePos).copyWith();
+                              this.scale_x=this.baseScale*scaleUpdateDetails.scale;
 
-                              if (scale_x<0) {
-                                sharedModel.changeScale(0);
-                              } else if(scale_x>10) {
-                                sharedModel.changeScale(10);
+                              if (this.scale_x<0.0001) {
+                                sharedModel.changeScale(0.0001);
+                              } else if(this.scale_x>10) {
+                                sharedModel.changeScale(10.0);
                               } else {
-                                sharedModel.changeScale(scale_x);
+                                sharedModel.changeScale(this.scale_x);
                               }
 
-                              sharedModel.changePos(pos);
+                              sharedModel.changePos(this.pos);
                             }
                           },
                           onInteractionEnd: (scaleEndDetails){},
                           child: Container(
                             width: constraints.maxWidth,
                             color: Color((widget.signature.hashCode.toDouble() * 0xFFFFFF).toInt()).withOpacity(0.5),
-                            child: Text("${widget.signature}+${pos}+${scale_x.toString()}"),
+                            child: Text("${widget.signature}+${this.pos}+${this.scale_x.toString()}"),
                           ),
                     ),
                   ),

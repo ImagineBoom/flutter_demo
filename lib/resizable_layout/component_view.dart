@@ -58,32 +58,33 @@ class SharedModel extends ChangeNotifier{
 
   void changeScaleWithSignature(String signature, double scale_x, [double? scale_y]){
     this.signature=signature;
-    this.sharedMessage.putIfAbsent(signature, () => SharedMessage(signature)).scale_x=scale_x;
+    this.sharedMessage.putIfAbsent(signature, () => SharedMessage(signature))..scale_x=scale_x;
     notifyListeners();
   }
 
   void changeScale(double scale_x, [double? scale_y]){
-    this.sharedMessage.putIfAbsent(signature, () => SharedMessage(signature)).scale_x=scale_x;
+    this.sharedMessage.putIfAbsent(signature, () => SharedMessage(signature))..scale_x=scale_x;
     notifyListeners();
   }
 
   void saveScale(double scale_x, [double? scale_y]){
-    this.sharedMessage.putIfAbsent(signature, () => SharedMessage(signature)).scale_x=scale_x;
+    print("saveScale $signature");
+    this.sharedMessage.putIfAbsent(signature, () => SharedMessage(signature))..scale_x=scale_x;
   }
 
   void changePosWithSignature(String signature, Offset pos){
     this.signature=signature;
-    this.sharedMessage.putIfAbsent(signature, () => SharedMessage(signature)).pos=pos.copyWith();
+    this.sharedMessage.putIfAbsent(signature, () => SharedMessage(signature))..pos=pos.copyWith();
     notifyListeners();
   }
 
   void changePos(Offset pos){
-    this.sharedMessage.putIfAbsent(signature, () => SharedMessage(signature)).pos=pos.copyWith();
+    this.sharedMessage.putIfAbsent(signature, () => SharedMessage(signature))..pos=pos.copyWith();
     notifyListeners();
   }
 
   void savePos(Offset pos){
-    this.sharedMessage.putIfAbsent(signature, () => SharedMessage(signature)).pos=pos.copyWith();
+    this.sharedMessage.putIfAbsent(signature, () => SharedMessage(signature))..pos=pos.copyWith();
   }
 
   void removeSignature(String signature){
@@ -180,6 +181,7 @@ class _PaneHorizontalDividerState extends State<PaneHorizontalDivider>{
 class ScaleSlider extends StatefulWidget {
   const ScaleSlider({super.key});
   final double max=10.0;
+  final double min=0.0001;
   final int divisions =40;
   final double buttonWidth=20;
   @override
@@ -199,12 +201,14 @@ class _SlidersState extends State<ScaleSlider> {
         GestureDetector(
             onLongPressStart: (longPressStartDetails){
               timer = Timer.periodic(const Duration(milliseconds: 250), (t) {
-                double scale_x=sharedModel.scale_x-2*widget.max/widget.divisions;
-                if(scale_x>=0){
-                  sharedModel.changeSignature(sharedModel.signature);
-                  sharedModel.changeScale(scale_x);
-                }
+                double scale_x=sharedModel.scale_x-2*widget.max/widget.divisions;                  sharedModel.changeSignature(sharedModel.signature);
+                sharedModel.changeSignature(sharedModel.signature);
 
+                if(scale_x>widget.min){
+                  sharedModel.changeScale(scale_x);
+                }else{
+                  sharedModel.changeScale(widget.min);
+                }
                 // double scale_y=sharedModel.scale_y-2*widget.max/widget.divisions;
                 // if(scale_y>=0){
                 //   sharedModel.changeSignature(sharedModel.signature);
@@ -229,11 +233,13 @@ class _SlidersState extends State<ScaleSlider> {
               elevation:0,
               onPressed: (){
                 double scale_x=sharedModel.scale_x-2*widget.max/widget.divisions;
-                if(scale_x>=0){
-                  sharedModel.changeSignature(sharedModel.signature);
-                  sharedModel.changeScale(scale_x);
-                }
+                sharedModel.changeSignature(sharedModel.signature);
 
+                if(scale_x>widget.min){
+                  sharedModel.changeScale(scale_x);
+                }else{
+                  sharedModel.changeScale(widget.min);
+                }
                 // double scale_y=sharedModel.scale_y-2*widget.max/widget.divisions;
                 // if(scale_y>=0){
                 //   sharedModel.changeSignature(sharedModel.signature);
@@ -251,16 +257,19 @@ class _SlidersState extends State<ScaleSlider> {
           ),
         SliderTheme(
           data: SliderThemeData(
+            // trackHeight:4.0, //滑条宽度
             thumbColor: CupertinoColors.systemBlue, // 拖动控件的颜色
             overlayColor: Colors.transparent, // 光晕颜色
             activeTrackColor: CupertinoColors.activeOrange, // 已激活部分的颜色
             inactiveTrackColor: CupertinoColors.systemTeal.withOpacity(0.4), // 未激活部分的颜色
+            overlayShape: SliderComponentShape.noOverlay,//左右padding
           ),
           child: Slider(
             autofocus: true,
             secondaryTrackValue:1,
             // inactiveColor: Colors.transparent,
             max: widget.max,
+            min: widget.min,
             divisions: widget.divisions,
             value: sharedModel.scale_x,
             // label: (sharedModel.scale_x*100).toString()+"%",
@@ -276,9 +285,11 @@ class _SlidersState extends State<ScaleSlider> {
             onLongPressStart: (longPressStartDetails){
               timer = Timer.periodic(const Duration(milliseconds: 250), (t) {
                 double scale_x=sharedModel.scale_x+2*widget.max/widget.divisions;
-                if(scale_x<=10){
-                  sharedModel.changeSignature(sharedModel.signature);
+                sharedModel.changeSignature(sharedModel.signature);
+                if(scale_x<=widget.max){
                   sharedModel.changeScale(scale_x);
+                }else{
+                  sharedModel.changeScale(widget.max);
                 }
 
                 // double scale_y=sharedModel.scale_y+2*widget.max/widget.divisions;
@@ -306,11 +317,12 @@ class _SlidersState extends State<ScaleSlider> {
               elevation:0,
               onPressed: (){
                 double scale_x=sharedModel.scale_x+2*widget.max/widget.divisions;
-                if(scale_x<=10){
-                  sharedModel.changeSignature(sharedModel.signature);
+                sharedModel.changeSignature(sharedModel.signature);
+                if(scale_x<=widget.max){
                   sharedModel.changeScale(scale_x);
+                }else{
+                  sharedModel.changeScale(widget.max);
                 }
-
                 // double scale_y=sharedModel.scale_y+2*widget.max/widget.divisions;
                 // if(scale_y<=10){
                 //   sharedModel.changeSignature(sharedModel.signature);
