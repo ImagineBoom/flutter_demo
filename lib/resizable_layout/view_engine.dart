@@ -381,7 +381,7 @@ class PanelTreeState extends State<PanelTree>{
   // according it's signature
   // 1. parent remove the node and it's brother node
   // 2. replace all nodes signature with the provided node's brother node's signature
-  void removeNodeInTree(PanelNode? node){
+  void removeNodesInTree(PanelNode? node){
     if(node==null){return;}
 
     // find brother and parent nodes
@@ -407,14 +407,14 @@ class PanelTreeState extends State<PanelTree>{
       // print("brother=${brotherNode}");
 
       // 2. 回溯 parents node
-      // backtrack parents node,
+      // backtrack ancestral nodes,
       // update tree, replace this signature with brother's signature
       for(PanelNode? pn=node.parent; pn?.signature==node.signature; pn=pn?.parent){
         pn?.signature=brotherNode.signature;
         print("pn.signature=${pn?.signature}");
       }
 
-      // 3. cut off connect to parent node, destroy the node
+      // 3. cut off the brothers' connection to parent node, destroy the brothers
       node.parent=null;
       brotherNode.parent=null;
       node=null;
@@ -423,7 +423,7 @@ class PanelTreeState extends State<PanelTree>{
     else{
       // if brother is child tree
 
-      // 1. backtrack parents node,
+      // 1. backtrack ancestral nodes,
       // update tree, replace this signature with brother's signature
       for(PanelNode? pn=node.parent; pn?.signature==node.signature; pn=pn?.parent){
         pn?.signature=brotherNode.signature;
@@ -440,6 +440,7 @@ class PanelTreeState extends State<PanelTree>{
       brotherNode.parent=grandPa;
 
       if(grandPa!=null){
+        // 4. judge parent is child1 or child2 to grandpa
         if(grandPa.child1?.signature==parentNode.signature){
           grandPa.child1=brotherNode;
         }else if(grandPa.child2?.signature==parentNode.signature){
@@ -447,15 +448,17 @@ class PanelTreeState extends State<PanelTree>{
         }
       }
       else{
+        // 4. set brother as root
         root=brotherNode;
         brotherNode.parent=null;
       }
 
-      // 4. destroy node and parent
+      // 5. destroy node and parent
       node=null;
       parentNode=null;
 
-      // 5. resizeFromTreeRoot
+      // 6. resizeFromTreeRoot
+      // 将以兄弟节点为树根的子树遍历，重置其中每个节点的PoS
       resizeFromTreeRoot(brotherNode);
     }
   }
@@ -467,17 +470,21 @@ class PanelTreeState extends State<PanelTree>{
     Queue<PanelNode> stack=Queue();
  
     // init the stack
+    // 将子树的根节点入栈
     stack.addLast(child);
 
     // pre-order traversal algorithm for binary trees
     while(stack.isNotEmpty){
+      // pop the top element of the stack
       PanelNode curNode=stack.removeLast();
-      panelHashTable[curNode.signature]?.pos = curNode.pos.copyWith();
 
+      // the curNode is leaf? if true continue else go on
       if(curNode.child1==null || curNode.child2==null){
+        // update the hash table for re-size and re-position the leaf node panel
+        panelHashTable[curNode.signature]?.pos = curNode.pos.copyWith();
         continue;
       }
-
+      // the curNode is a subTree
       if(curNode.child1 != null && curNode.child2 != null){
 
         if(curNode.state==SplitDirection.vertical){
@@ -664,7 +671,7 @@ class PanelTreeState extends State<PanelTree>{
     debugPrint(root.toString());
     print("close ${signature}");
 
-    // 1. find brother and parent nodes
+    // 1. find brothers and parent nodes
     PanelNode? leafNode=findLeafNode(signature, root);
     PanelNode? brotherNode = findNodeBrother(signature);
     PanelNode? parentNode = brotherNode?.parent;
@@ -689,14 +696,14 @@ class PanelTreeState extends State<PanelTree>{
         // not root node
         // 2. update node tree
         // remove the node
-        removeNodeInTree(leafNode);
+        removeNodesInTree(leafNode);
 
         // 3. update hashtable from node tree
 
         // 3.1 remove this from hashtable
         panelHashTable.remove(signature);
 
-        // 3.2 get new leaf accord brotherSignature
+        // 3.2 get new leaf node accord the original brother's signature
         brotherNode=findLeafNode(brotherNodeSignature, root);
         if(brotherNode!=null){
 
@@ -704,9 +711,9 @@ class PanelTreeState extends State<PanelTree>{
         print("brotherNodeSignature=$brotherNodeSignature");
         print("new brotherNode?.signature=${brotherNode?.signature}");
         print("new brotherNode PoS=${brotherNode?.pos}");
-        // 3.3 update brother state from tree
+        // 3.3 update brother node's state in the hash table accord tree's info
         panelHashTable[brotherNodeSignature]?.state = brotherNode?.state;
-        // 3.4 update brother pos free tree
+        // 3.4 update brother node's PoS in the hash table according tree's info
         panelHashTable[brotherNodeSignature]?.pos = brotherNode!.pos.copyWith();
         // update hash table element's position and size
         // PanelNode? beginNode=findBeginNode(signature, node);
